@@ -440,10 +440,10 @@ class Notification(APIView):
     # Read
     def get(self, request, *args, **kwargs):
         try:
-            note_id = request.query_params['noteId']
+            user_id = request.query_params['userId']
         except KeyError:
             return invalid_response
-        return notes.load_notification(note_id)
+        return notes.load_notifications(user_id)
 
     # Update
     def put(self, request, *args, **kwargs):
