@@ -428,10 +428,12 @@ class Notification(APIView):
             if 'groupId' in request.query_params:
                 group_id = request.query_params['groupId']
             desc = request.query_params['desc']
+            note_type = request.query_params['note_type']
             note = {
-                'user_id': user_id,
-                'group_id': group_id,
-                'desc': desc
+                'userId': user_id,
+                'groupId': group_id,
+                'desc': desc,
+                'note_type': note_type
             }
         except KeyError:
             return invalid_response
@@ -440,10 +442,10 @@ class Notification(APIView):
     # Read
     def get(self, request, *args, **kwargs):
         try:
-            note_id = request.query_params['noteId']
+            user_id = request.query_params['noteId']
         except KeyError:
             return invalid_response
-        return notes.load_notification(note_id)
+        return notes.load_notification(user_id)
 
     # Update
     def put(self, request, *args, **kwargs):

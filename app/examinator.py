@@ -60,5 +60,3 @@ def test_auth():
     else:
         debug_out(board)
 
-
-

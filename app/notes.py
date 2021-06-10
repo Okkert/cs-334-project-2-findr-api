@@ -63,7 +63,7 @@ def create_notification(note):
         user_id = note["userId"]
         status = False
         desc = note["desc"]
-        note_type = note["type"]
+        note_type = note["note_type"]
         group_id = note["groupId"]
     except KeyError:
         return resp.RESP_INVALID
@@ -142,17 +142,17 @@ def load_notification(note_id):
 
     """
     try:
-        note = load_notification(note_id)
+        n = load_notification(note_id)
 
-        if note is None:
+        if n is None:
             return gen_missing("notification")
 
         note_data = {
-            "noteId": note.note_id,
-            "userId": note.user_id,
-            "status": note.note_status,
-            "desc": note.note_desc,
-            "time": note.note_birthday
+            "noteId": n.note_id,
+            "userId": n.user_id,
+            "status": n.note_status,
+            "desc": n.note_desc,
+            "time": n.note_birthday
         }
 
         content = {
@@ -225,3 +225,5 @@ def send_password_retrieval_email(email, username, cumin):
         connection.login(user=from_email, password=paprika)
         connection.sendmail(from_addr=from_email, to_addrs=email, msg=msg)
         connection.close()
+
+
