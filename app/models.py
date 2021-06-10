@@ -4,11 +4,10 @@
 # Imports
 #from django.db import models
 from datetime import datetime
-from sqlalchemy import create_engine, MetaData, Table, Column, Boolean, Integer, String, DateTime, Text, ForeignKey, Enum, or_, and_, func, desc
+from sqlalchemy import create_engine, Column, Boolean, Integer, String, ForeignKey, Enum
 from sqlalchemy_utils import database_exists, create_database
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
-from sqlalchemy.dialects.mysql import LONGTEXT, MEDIUMTEXT
 import enum
 
 #=====================
@@ -58,6 +57,7 @@ class User(Model):
     email = Column(String(127), nullable=False)
     password = Column(String(127), nullable=False)
     auth_token = Column(String(255))
+    # avatar = Column(String(127), nullable=False) # TODO
     bio = Column(String)
     # relationship with posts table
     posts = relationship('Post', backref="user")
@@ -83,6 +83,7 @@ class Post(Model):
     __tablename__ = 'post'
     post_id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('user.user_id'))
+    group_id = Column(Integer, ForeignKey('group.group_id'))
     post_title = Column(String(50))
     post_desc = Column(String)
     post_likes = Column(Integer)
@@ -93,14 +94,15 @@ class Post(Model):
     comments = relationship('Comment', backref="post")
     # Category enum
 
-    def __init__(self, user_id, post_title, post_desc, post_loc):
+    def __init__(self, user_id, group_id, post_title, post_desc, post_loc):
         self.user_id = user_id
         self.post_title = post_title
         self.post_desc = post_desc
         self.post_loc = post_loc
+        self.group_id = group_id
 
     def __repr__(self):
-        return f"Post( '{self.user_id}', '{self.post_title}', '{self.post_desc}', '{self.post_loc}')"
+        return f"Post( '{self.user_id}', '{self.group_id}', {self.post_title}', '{self.post_desc}', '{self.post_loc}')"
 
 
 class Comment(Model):
@@ -143,33 +145,37 @@ class Member(Model):
     rel_id = Column(Integer, primary_key=True)
     group_id = Column(Integer, ForeignKey('group.group_id'))
     user_id = Column(Integer, ForeignKey('user.user_id'))
+    membership = Column(Integer, nullable=False) # 0 = Pending, 1 = Member, 2 = Admin
 
-    def __init__(self, group_id, user_id):
+    def __init__(self, group_id, user_id, membership):
         self.group_id = group_id
         self.user_id = user_id
+        self.membership = membership
 
     def __repr__(self):
-        return f"Member( '{self.group_id}', '{self.user_id}')"
+        return f"Member( '{self.group_id}', '{self.user_id}', '{self.membership}')"
 
 
 class Note(Model):
     __tablename__ = 'note'
     note_id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('user.user_id'))
+    group_id = Column(Integer, ForeignKey('group.group_id')) # Needed for loading all group requests
     note_type = Column(Enum(noteType))  # 0 = friends; 1 = groups Enum
     note_status = Column(Boolean, nullable=False)  # true = read, false = unread
     note_desc = Column(String)
     note_birthday = Column(String, default=datetime)
 
-    def __init__(self, user_id, note_type, note_status, note_desc, note_birthday):
+    def __init__(self, user_id, group_id, note_type, note_status, note_desc, note_birthday):
         self.user_id = user_id
+        self.group_id = group_id
         self.note_type = note_type
         self.note_status = note_status
         self.note_desc = note_desc
         self.note_birthday = note_birthday
 
     def __repr__(self):
-        return f"Note( '{self.user_id}', '{self.note_type}', '{self.note_status}', '{self.note_desc}', '{self.note_birthday}') "
+        return f"Note( '{self.user_id}', '{self.group_id}', {self.note_type}', '{self.note_status}', '{self.note_desc}', '{self.note_birthday}') "
 
 
 class Friend(Model):
@@ -284,7 +290,7 @@ def search_group(group_name):
 # Input - user_id (prim.key) and auth_token
 # Return: True if user is there and stores auth token, else False
 def store_token(user_id, token):
-    u = session.query(User).get(user_id)
+    u = session.get(user_id)
     if u == None:
         return False
     else:
@@ -298,7 +304,7 @@ def store_token(user_id, token):
 # Return True if user and auth_token = tok, else False
 def remove_token(user_id, token):
     print("user_id ", user_id)
-    u = session.query(User).get(user_id)
+    u = session.get(user_id)
     if u == None:
         return False
     else:
@@ -315,7 +321,7 @@ def remove_token(user_id, token):
 # Input - user_id (p.key)
 # Return auth tok if True, else empty string
 def fetch_token(user_id):
-    u = session.query(User).get(user_id)
+    u = session.get(user_id)
     if u == None:
         return None
     else:
@@ -326,7 +332,7 @@ def fetch_token(user_id):
 # Input - user_id (p.key)
 # Output, User object if true, else None type
 def search_user(user_id):
-    u = session.query(User).get(user_id)
+    u = session.get(user_id)
     return u
 
 
@@ -346,12 +352,12 @@ def search_user_email(email):
 # COMMENTS
 # -------------------------------
 def post_exists(post_id):
-    p = session.query(Post).get(post_id)
+    p = session.get(post_id)
     return p is not None
 
 
 def user_exists(user_id):
-    u = session.query(User).get(user_id)
+    u = session.get(user_id)
     return u is not None
 
 
@@ -363,7 +369,7 @@ def insert_comment(post_id, user_id, comment_content):
 
 
 def load_comment(comment_id):
-    c = session.query(Comment).get(comment_id)
+    c = session.get(comment_id)
     return c
 
 
@@ -416,15 +422,12 @@ def search_user_by_id(user_id):
 
 
 def create_post(user_id, group_id, post_title, post_body, post_location, post_cat):
-    try:
-        p = Post(user_id, post_title, post_body, post_location)
-        p.post_likes = 0
-        session.add(p)
-        session.commit()
-        # TODO: Initialise likes to 0
-        return True
-    except:
-        return False
+
+    p = Post(user_id, group_id, post_title, post_body, post_location)
+    p.post_likes = 0
+    session.add(p)
+    session.commit()
+    return True
 
 
 def remove_post(post_id):
@@ -524,7 +527,7 @@ def remove_comments(post_id):
 
 def get_comments(post_id):
     try:
-        c = session.query(Comment).filter(Comment.post_id == post_id)
+        c = session.query(Comment).filter(Comment.post_id == post_id).all()
         return c
     except:
         return False
@@ -604,9 +607,9 @@ def update_group_private(group_id, updated_private):
         return False
 
 
-def join_group(group_id, user_id):
+def join_group(group_id, user_id, membership):
     try:
-        m = Member(group_id=group_id, user_id=user_id)
+        m = Member(group_id=group_id, user_id=user_id, membership=membership)
         session.add(m)
         session.commit()
         return True
@@ -616,7 +619,7 @@ def join_group(group_id, user_id):
 
 def leave_group(group_id, user_id):
     try:
-        m = session.query(Member).filter(Member.group_id == group_id and Member.user_id == user_id)
+        m = session.query(Member).filter(Member.group_id == group_id).filter(Member.user_id == user_id)
         if m.first() is None:
             return -1
         else:
@@ -653,7 +656,7 @@ def load_group_members(group_id):
 
 def load_group_posts(group_id):
     try:
-        p = session.query(Post).filter(Post.group_id == group_id)
+        p = session.query(Post).filter(Post.group_id == group_id).all()
         return p
     except:
         return False
@@ -670,13 +673,154 @@ def remove_members(group_id):
     except:
         return False
 
-# def remove_posts(group_id):
-#     try:
-#         p = session.query(Member).filter(Member.group_id == group_id)
-#         if m.first() is None:
-#             return True
-#         m.delete()
-#         session.commit()
-#         return True
-#     except:
-#         return False
+
+def get_group_member(user_id, group_id):
+    try:
+        m = session.query(Member).filter(Member.group_id == group_id).filter(Member.user_id == user_id).first()
+        return m
+    except:
+        return False
+
+
+def promote_user(user_id, group_id):
+    try:
+        m = session.query(Member).filter(Member.group_id == group_id).filter(Member.user_id == user_id).first()
+        m.membership = 2
+        session.commit()
+        return True
+    except:
+        return False
+
+
+def demote_user(user_id, group_id):
+    try:
+        m = session.query(Member).filter(Member.group_id == group_id).filter(Member.user_id == user_id).first()
+        m.membership = 1
+        session.commit()
+        return True
+    except:
+        return False
+
+
+def get_group_admins(group_id):
+    try:
+        m = session.query(Member).filter(Member.membership == 2).filter(Member.group_id == group_id).all()
+        return m
+    except:
+        return False
+
+
+def delete_group_posts(group_id):
+    try:
+        p = session.query(Post).filter(Post.group_id == group_id)
+        if p.first() is None:
+            return True
+        p.delete()
+        session.commit()
+        return True
+    except:
+        return False
+
+
+def delete_group_members(group_id):
+    try:
+        m = session.query(Member).filter(Member.group_id == group_id)
+        if m.first() is None:
+            return True
+        m.delete()
+        session.commit()
+        return True
+    except:
+        return False
+
+
+def load_join_request(group_id):
+    try:
+        m = session.query(Member).filter(Member.membership == 0).all()
+        return m
+    except:
+        return False
+
+
+def request_group_invite(group_id, user_id):
+    try:
+        m = Member(group_id=group_id, user_id=user_id, membership=0)
+        session.add(m)
+        session.commit()
+    except:
+        return False
+
+
+def accept_join_request(group_id, user_id):
+    try:
+        m = session.query(Member).filter(Member.user_id == user_id).filter(Member.group_id == group_id).\
+            filter(Member.membership == 0).first()
+        if m is None:
+            return -1
+        m.membership = 1
+        session.commit()
+        return True
+    except:
+        return False
+
+
+def decline_join_request(group_id, user_id):
+    try:
+        m = session.query(Member).filter(Member.user_id == user_id).filter(Member.group_id == group_id).\
+            filter(Member.membership == 0)
+        if m is None:
+            return -1
+        m.delete()
+        session.commit()
+        return True
+    except:
+        return False
+
+
+# -------------------------------
+# Helper Function's for notes.py
+# -------------------------------
+
+
+def load_notifications(user_id):
+    try:
+        n = session.query(Note).filter(Note.user_id == user_id).all()
+        return n
+    except:
+        return False
+
+
+def load_notification(user_id):
+    try:
+        n = session.query(Note).filter(Note.user_id == user_id).first()
+        return n
+    except:
+        return None
+
+
+def create_notification(user_id, desc, note_type, status, group_id=None):
+    try:
+        n = Note(user_id, group_id, type, status, desc)
+        session.add(n)
+        session.commit()
+        return True
+    except:
+        return False
+
+
+def delete_notification(note_id):
+    try:
+        n = session.query(Note).filter(Note.note_id == note_id).delete()
+        return True
+    except:
+        return False
+
+
+def update_notification(note_id):
+    try:
+        n = session.query(Note).filter(Note.note_id == note_id).first()
+        n.status = True
+        return True
+    except:
+        return False
+

@@ -1,12 +1,13 @@
 from django.test import TestCase
-from findr.app.auth import register, login, logout
-from findr.app.utils.toolbox import debug_out
+# The imports below cause errors for me for some reason
+# from . import groups
+# from . import posts
 import findr.app.posts as posts
 import findr.app.groups as groups
 
 
 # ---------------------------- POSTS TESTS ------------------------------- #
-def test_create_post(mode):
+def test_create_post(mode, group_id, user_id):
     """Tests create_post()
 
     Parameters
@@ -18,9 +19,9 @@ def test_create_post(mode):
     post = {}
     if mode == 1:
         post = {
-            "groupId": 11,
+            "groupId": group_id,
             "author": {
-                "userId": 2,
+                "userId": user_id,
                 "username": "Swingeon\n",
                 "avatar": "path/to/jane42.png\n"
             },
@@ -66,13 +67,11 @@ def test_remove_post(mode, post_id):
     if mode == 3:
         response = posts.remove_post(-1, 2)
 
-    print(response)
-
 
 def test_edit_post(mode):
     if mode == 1:
         post = {
-            "postId": 14,
+            "postId": 1,
             "groupId": 11,
             "author": {
                 "userId": 2,
@@ -113,7 +112,7 @@ def test_edit_post(mode):
 
 def test_like_post(mode):
     if mode == 1:
-        response = posts.like_post(14, 2)
+        response = posts.like_post(1, 2)
     if mode == 2:
         response = posts.like_post(-1, 2)
     if mode == 3:
@@ -126,7 +125,7 @@ def test_post_comment(mode):
             "authorId": 2,
             "commentContent": "I don't care about hot tubs, only beets, bears and battlestar galactica"
         }
-        posts.post_comment(14, comment)
+        posts.post_comment(1, comment)
     if mode == 2:
         comment = {
             "authorId": 2,
@@ -140,9 +139,15 @@ def test_post_comment(mode):
         posts.post_comment(14, comment)
 
 
+def test_load_post(mode):
+    if mode == 1:
+        response = posts.load_post(1)
+    if mode == 2:
+        response = posts.load_post(-1)
+
 
 # ---------------------------- GROUP TESTS ------------------------------- #
-def test_create_group(mode):
+def test_create_group(mode, user_id):
     """Tests create_group()
 
     Parameters
@@ -153,9 +158,9 @@ def test_create_group(mode):
 
     if mode == 1:
         group = {
-            "title": "Jane's Hot Tub Party",
-            "desc": "I bought a hot tub, who wants to be my twitch mod?\n",
-            "private": True
+            "title": "Bush Babies",
+            "desc": "I like limas, bats and bush babies\n",
+            "private": False
         }
 
     if mode == 2:
@@ -163,8 +168,7 @@ def test_create_group(mode):
             "title": "Jane's Hot Tub Party",
         }
 
-    response = groups.create_group(group)
-    print(response)
+    response = groups.create_group(group, user_id)
 
 
 def test_load_group(mode, group_id):
@@ -183,8 +187,6 @@ def test_load_group(mode, group_id):
     if mode == 3:
         response = groups.load_group()
 
-    print(response)
-
 
 def test_delete_group(mode, group_id):
     """Tests load_group()
@@ -202,11 +204,10 @@ def test_delete_group(mode, group_id):
     if mode == 3:
         response = groups.load_group()
 
-    print(response)
 
-
+# TODO: Add more testing modes
 def test_edit_group(mode):
-    """Tests load_group()
+    """Tests edit_group()
 
     Parameters
     ----------
@@ -215,65 +216,39 @@ def test_edit_group(mode):
         by id, if mode is 3 it tests with a non-existent group and if mode is 4 it tests a bad request
     """
     if mode == 1:
-        # group = {
-        #     "title": "Susan's Thruple",
-        #     "desc": "Welcome to my thruple\n",
-        #     "private": True
-        # }
-        # response = groups.create_group(group)
-        # print(f"Created group with response:\n{response}")
         group = {
-            "id": 11,
-            "title": "Suzie",
-            "desc": "Good boys share their toys and hot tubs\n",
+            "id": 14,
+            "title": "Suzie's Thruple",
+            "desc": "Just me, Steve and Swingeon",
             "private": True
         }
         response = groups.edit_group(group)
-    if mode == 2:
-        response = groups.load_group(group_id=-1)
-    if mode == 3:
-        response = groups.load_group(group_id=-1)
-    if mode == 4:
-        response = groups.load_group()
-    print(response)
 
 
-def test_join_group(mode):
+def test_join_group(mode, group_id, user_id):
     if mode == 1:
-        username = "Swingeon"
-        group_id = 11
-        response = groups.join_group(user_id=2, group_id=group_id)
+        response = groups.join_group(user_id=user_id, group_id=group_id)
 
     elif mode == 2:
-        username = "abcd"
-        group_id = 11
-        response = groups.join_group(user_id=2, group_id=group_id)
+        group_id = 18
+        response = groups.join_group(user_id=-1, group_id=group_id)
 
     elif mode == 3:
-        username = "Swingeon"
         group_id = -1
-        response = groups.join_group(user_id=2, group_id=group_id)
-
-    print(response)
+        response = groups.join_group(user_id=user_id, group_id=-1)
 
 
-def test_leave_group(mode):
+def test_leave_group(mode, group_id, user_id):
     if mode == 1:
-        username = "Swingeon"
-        group_id = 11
-        response = groups.leave_group(user_id=2, group_id=group_id)
+        response = groups.leave_group(user_id=user_id, group_id=group_id)
 
     elif mode == 2:
-        username = "abcd"
-        group_id = 11
-        response = groups.leave_group(user_id=2, group_id=group_id)
+        group_id = 13
+        response = groups.leave_group(user_id=user_id, group_id=group_id)
 
     elif mode == 3:
-        username = "Swingeon"
         group_id = -1
-        response = groups.leave_group(user_id=2, group_id=group_id)
-
-    print(response)
+        response = groups.leave_group(user_id=user_id, group_id=group_id)
 
 
 def test_search_groups(mode):
@@ -290,6 +265,90 @@ def test_search_groups(mode):
 
 def test_load_group_members(mode):
     if mode == 1:
-        group_id = 11
+        group_id = 18
         response = groups.load_group_members(group_id)
+    if mode == 2:
+        group_id = -1
+        response = groups.load_group_members(group_id)
+
+
+def test_load_group_posts(mode, group_id):
+    if mode == 1:
+        groups.load_group_posts(group_id)
+    elif mode == 2:
+        groups.load_group_posts(-1)
+
+
+def test_promote_member(mode, user_id, group_id):
+    if mode == 1:
+        groups.promote_member(group_id=group_id, user_id=2, promote_user_id=user_id)
+    if mode == 2:
+        groups.promote_member(group_id=-1, user_id=2, promote_user_id=user_id)
+    if mode == 3:
+        groups.promote_member(group_id=group_id, user_id=3, promote_user_id=user_id)
+    if mode == 4:
+        groups.promote_member(group_id=group_id, user_id=2, promote_user_id=-1)
+
+
+def test_demote_member(mode, group_id, user_id):
+    if mode == 1:
+        groups.demote_member(group_id=group_id, user_id=2, demote_user_id=user_id)
+    if mode == 2:
+        groups.demote_member(group_id=-1, user_id=2, demote_user_id=user_id)
+    if mode == 3:
+        groups.demote_member(group_id=group_id, user_id=3, demote_user_id=user_id)
+    if mode == 4:
+        groups.demote_member(group_id=group_id, user_id=2, demote_user_id=-1)
+
+
+def test_load_join_request(mode, group_id):
+    if mode == 1:
+        groups.load_join_request(group_id=group_id)
+
+
+def test_request_group_invite(mode, group_id, user_id):
+    if mode == 1:
+        groups.request_group_invite(group_id=group_id, user_id=user_id)
+    if mode == 2:
+        groups.request_group_invite(group_id=-1, user_id=user_id)
+    if mode == 3:
+        groups.request_group_invite(group_id=group_id, user_id=-1)
+
+
+def test_accept_join_request(mode, group_id, user_id):
+    if mode == 1:
+        groups.accept_join_request(group_id=group_id, user_id=user_id)
+    if mode == 2:
+        groups.accept_join_request(group_id=-1, user_id=user_id)
+    if mode == 3:
+        groups.accept_join_request(group_id=group_id, user_id=-1)
+
+
+def test_decline_join_request(mode, group_id, user_id):
+    if mode == 1:
+        groups.decline_join_request(group_id=group_id, user_id=user_id)
+    if mode == 2:
+        groups.decline_join_request(group_id=-1, user_id=user_id)
+    if mode == 3:
+        groups.decline_join_request(group_id=group_id, user_id=-1)
+
+
+# ---------------------------- NOTIFICATION TESTS ------------------------------- #
+
+# TODO
+def test_load_notification():
+    return True
+
+# TODO
+def test_create_notification():
+    return True
+
+# TODO
+def test_delete_notification():
+    return True
+
+# TODO
+def test_update_notification():
+    return True
+
 

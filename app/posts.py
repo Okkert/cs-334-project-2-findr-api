@@ -3,8 +3,8 @@ from .utils.toolbox import gen_response
 from .utils import response_constants as resp
 
 
-# Function Status: Basic implementation, not tested
-# and Post table needs to be adapted to accept group information
+# Function Status: Complete and tested
+# TODO: Add category
 def create_post(post):
     """ Creates a new group and sets the creator as admin
 
@@ -54,7 +54,7 @@ def create_post(post):
     return gen_response(resp.OK, content)
 
 
-# Function Status: Incomplete implementation, but tested
+# Function Status: Complete implementation, but not tested
 def remove_post(post_id, user_id):
     """Removes a post from Findr
 
@@ -81,18 +81,26 @@ def remove_post(post_id, user_id):
         }
         return gen_response(resp.ERR_MISSING, content)
 
+    # If the user attempting to remove the post did not author the post then check if they are an admin
     if user_id != post.user_id:
-        # TODO:
-        # If user does not own the post, check if they are the admin of the group
-        # group_id = post.group_id
-        # Get admins of group
-        # Cross reference against user making delete request
-        # Proceed accordingly
+        member = models.get_group_member(user_id=user_id, group_id=post.group_id)
+        if member is False:
+            content = {
+                "reason": "Internal server error"
+            }
+            return gen_response(resp.ERR_SERVER, content)
 
-        content = {
-            "reason": "User does not have permissions to delete this post"
-        }
-        return gen_response(resp.ERR_UNAUTH, content)
+        if member is not None:
+            if member.admin is False:
+                content = {
+                    "reason": "User does not have permissions to delete this post"
+                }
+                return gen_response(resp.ERR_UNAUTH, content)
+        else:
+            content = {
+                "reason": "User does not have permissions to delete this post"
+            }
+            return gen_response(resp.ERR_UNAUTH, content)
 
     status = models.remove_comments(post_id=post_id)
     if not status:
@@ -214,7 +222,7 @@ def like_post(post_id, user_id):
     return gen_response(resp.OK, content)
 
 
-# Function Status: Complete not tested
+# Function Status: Complete and tested
 def post_comment(post_id, comment):
     """Comment on a post
 
@@ -241,7 +249,6 @@ def post_comment(post_id, comment):
         }
         return gen_response(resp.ERR_INVALID, content)
 
-    # TODO: Check if user and post are valid users and posts
     post = models.load_post(post_id=post_id)
     if post is None:
         content = {
@@ -270,7 +277,7 @@ def post_comment(post_id, comment):
     return gen_response(resp.OK, content)
 
 
-# Function Status: Basic implementation, almost complete, not tested
+# Function Status: Basic implementation, tested
 # TODO: Get path to avatar
 # TODO: Return whether the user has liked the post
 def load_post(post_id):
@@ -288,7 +295,6 @@ def load_post(post_id):
 
     """
     post = models.load_post(post_id=post_id)
-    user = models.search_user_by_id(user_id=post.user_id)
 
     if post is None:
         content = {
@@ -300,6 +306,8 @@ def load_post(post_id):
             "reason": "Internal server error"
         }
         return gen_response(resp.ERR_SERVER, content)
+
+    user = models.search_user_by_id(user_id=post.user_id)
 
     if user == -1:
         content = {
@@ -361,7 +369,7 @@ def load_post(post_id):
         "hasLiked": has_liked,
         "postLocation": post.post_loc,
         "postTime": post.post_time,
-        "category": post.category,
+        "category": post.post_cat,
         "postComments": post_comments
     }
     return gen_response(resp.OK, content)

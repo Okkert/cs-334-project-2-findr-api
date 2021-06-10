@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import JsonResponse
 from rest_framework.response import Response
 from rest_framework.views import APIView
+
 from . import groups, posts, comments, auth, user, notes
 from .auth import get_request_token
 from .utils.toolbox import gen_response
@@ -10,6 +11,7 @@ from .utils import response_constants as resp
 # CONSTANT
 invalid_response = Response(status=400, data={"reason": "Invalid response"})
 invalid_token = Response(status=401, data={"reason": "Invalid token"})
+
 
 # import user
 # Create your views here.
@@ -112,8 +114,19 @@ class DeleteUser(APIView):
 
 
 # ------------------- GROUPS ------------------- #
-class CreateGroup(APIView):
+
+class Group(APIView):
+    # Load group
     def get(self, request, *args, **kwargs):
+        try:
+            group_id = request.query_params["groupId"]
+        except KeyError:
+            return invalid_response
+
+        return groups.load_group(group_id=group_id)
+
+    # Create Group
+    def post(self, request, *args, **kwargs):
         try:
             # This is an example of token checking
             if not authentic_token(request):
@@ -135,9 +148,17 @@ class CreateGroup(APIView):
 
         return groups.create_group(group)
 
+    # Delete Group
+    def delete(self, request, *args, **kwargs):
+        try:
+            group_id = request.query_params["groupId"]
+        except KeyError:
+            return invalid_response
 
-class EditGroup(APIView):
-    def get(self, request, *args, **kwargs):
+        return groups.delete_group(group_id=group_id)
+
+    # Edit Group
+    def put(self, request, *args, **kwargs):
         try:
             group_id = request.query_params["groupId"]
             title = request.query_params["title"]
@@ -167,16 +188,6 @@ class LeaveGroup(APIView):
         return groups.leave_group(user_id=user_id, group_id=group_id)
 
 
-class DeleteGroup(APIView):
-    def get(self, request, *args, **kwargs):
-        try:
-            group_id = request.query_params["groupId"]
-        except KeyError:
-            return invalid_response
-
-        return groups.delete_group(group_id=group_id)
-
-
 class JoinGroup(APIView):
     def get(self, request, *args, **kwargs):
         try:
@@ -186,16 +197,6 @@ class JoinGroup(APIView):
             return invalid_response
 
         return groups.join_group(group_id=group_id, user_id=user_id)
-
-
-class LoadGroup(APIView):
-    def get(self, request, *args, **kwargs):
-        try:
-            group_id = request.query_params["groupId"]
-        except KeyError:
-            return invalid_response
-
-        return groups.load_group(group_id=group_id)
 
 
 class SearchGroups(APIView):
@@ -252,9 +253,54 @@ class DemoteMember(APIView):
         return groups.demote_member(group_id, user_id, demote_id)
 
 
+class LoadJoinRequest(APIView):
+    def get(self, request):
+        try:
+            group_id = request.query_params["groupId"]
+        except KeyError:
+            return invalid_response
+
+        return groups.load_join_request(group_id)
+
+
+class RequestJoinGroup(APIView):
+    def get(self, request):
+        try:
+            group_id = request.query_params["groupId"]
+            user_id = request.query_params["userId"]
+        except KeyError:
+            return invalid_response
+
+        return groups.request_group_invite(group_id=group_id, user_id=user_id)
+
+
+class AcceptJoinRequest(APIView):
+    def get(self, request):
+        try:
+            group_id = request.query_params["groupId"]
+            user_id = request.query_params["userId"]
+        except KeyError:
+            return invalid_response
+
+        return groups.accept_join_request(group_id=group_id, user_id=user_id)
+
+
+class DeclineJoinRequest(APIView):
+    def get(self, request):
+        try:
+            group_id = request.query_params["groupId"]
+            user_id = request.query_params["userId"]
+        except KeyError:
+            return invalid_response
+
+        return groups.decline_join_request(group_id=group_id, user_id=user_id)
+
+
 # ------------------- POSTS ------------------- #
-class CreatePost(APIView):
-    def get(self, request, *args, **kwargs):
+
+class Post(APIView):
+    # Create post
+    def post(self, request, *args, **kwargs):
         try:
             user_id = request.query_params["userId"]
             group_id = request.query_params["groupId"]
@@ -278,6 +324,57 @@ class CreatePost(APIView):
 
         return posts.create_post(post)
 
+    # Read post
+    def get(self, request, *args, **kwargs):
+        try:
+            post_id = request.query_params["postId"]
+        except KeyError:
+            return invalid_response
+
+        return posts.load_post(post_id)
+
+    # Edit post
+    def put(self, request, *args, **kwargs):
+        try:
+            post_id = request.query_params["postId"]
+            group_id = request.query_params["groupId"]
+            user_id = request.query_params["userId"]
+            author_id = request.query_params["authorId"]
+            post_title = request.query_params["title"]
+            post_content = request.query_params["postContent"]
+        except KeyError:
+            return invalid_response
+
+        post = {
+            "postId": post_id,
+            "groupId": group_id,
+            "author": {
+                "userId": author_id
+            },
+            "title": post_title,
+            "postContent": post_content
+        }
+        return posts.edit_post(post=post, user_id=user_id)
+
+    # Delete Post
+    def delete(self, request, *args, **kwargs):
+        try:
+            post_id = request.query_params["postId"]
+            user_id = request.query_params["userId"]
+        except KeyError:
+            return invalid_response
+
+        return posts.remove_post(post_id=post_id, user_id=user_id)
+
+
+class LikePost(APIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            post_id = request.query_params["postId"]
+            user_id = request.query_params["userId"]
+        except KeyError:
+            return invalid_response
+        return posts.like_post(post_id=post_id, user_id=user_id)
 
 # ------------------- COMMENTS ------------------- #
 
@@ -321,17 +418,19 @@ class Comment(APIView):
         return comments.delete_comment(comment_id)
 
 
-# ------------------- COMMENTS ------------------- #
+# ------------------- NOTIFICATIONS ------------------- #
 class Notification(APIView):
     # Create
     def post(self, request, *args, **kwargs):
         try:
             user_id = request.query_params['userId']
-            status = request.query_params['status']
+            group_id = 69
+            if 'groupId' in request.query_params:
+                group_id = request.query_params['groupId']
             desc = request.query_params['desc']
             note = {
                 'user_id': user_id,
-                'status': status,
+                'group_id': group_id,
                 'desc': desc
             }
         except KeyError:
@@ -350,13 +449,14 @@ class Notification(APIView):
     def put(self, request, *args, **kwargs):
         try:
             note_id = request.query_params['noteId']
-            data = {
-                'note_id': note_id
-            }
-            if 'status' in request.query_params:
-                data['status'] = request.query_params['status']
-            if 'desc' in request.query_params:
-                data['desc'] = request.query_params['desc']
         except KeyError:
             return invalid_response
-        return notes.update_notification(note=data)
+        return notes.update_notification(note_id)
+
+    # Delete
+    def delete(self, request, *args, **kwargs):
+        try:
+            note_id = request.query_params['noteId']
+        except KeyError:
+            return invalid_response
+        return notes.delete_notification(note_id=note_id)
