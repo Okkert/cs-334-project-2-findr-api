@@ -125,7 +125,6 @@ def update_notification(note_id):
 
     success = models.update_notification(note_id)
     if success is False:
-        print("foo")
         return resp.RESP_SERVER
     return gen_response(resp.OK)
     #except:

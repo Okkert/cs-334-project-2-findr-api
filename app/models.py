@@ -367,7 +367,9 @@ def group_exists(group_id):
 
 
 def note_exists(note_id):
+    print(note_id)
     n = session.query(Note).get(note_id)
+
     return n is not None
 
 
@@ -800,9 +802,9 @@ def load_notifications(user_id):
         return False
 
 
-def load_notification(user_id):
+def load_notification(note_id):
     try:
-        n = session.query(Note).filter(Note.user_id == user_id).first()
+        n = session.query(Note).get(note_id)
         return n
     except:
         return None

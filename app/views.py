@@ -452,7 +452,6 @@ class Notification(APIView):
     def put(self, request, *args, **kwargs):
         try:
             note_id = request.query_params['noteId']
-            print(note_id)
         except KeyError:
             return invalid_response
         return notes.update_notification(note_id)
