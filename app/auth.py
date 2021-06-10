@@ -330,11 +330,7 @@ def login(username, email, password, remember_me):
             response = gen_response(resp.ERR_INVALID, {"reason": "Invalid username"})
             return response
     elif email is not None:
-        if valid_email(email):
-            user = models.search_user_email(email)
-        else:
-            response = gen_response(resp.ERR_INVALID, {"reason": "Invalid email"})
-            return response
+        user = models.search_user_email(email)
     else:
         return gen_response(resp.ERR_INVALID, {"reason": "Username and email can't both be empty"})
 
