@@ -229,7 +229,8 @@ def valid_email(email):
         """
     try:
         email_valid = re.search(r"^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)*$", email)
-        return email_valid is not None
+        valid = email_valid is not None
+        return valid and not email_exists(email)
     except:
         debug_out("valid_email failed")
         return False
@@ -249,6 +250,16 @@ def username_exists(username):
     except:
         debug_out("valid_username failed")
         return False
+
+
+def email_exists(email):
+    try:
+        user = models.search_user_email(email)
+        return user is not None
+    except:
+        debug_out("email_exists failed")
+        return False
+
 
 #  -  -  -  -  -  #
 #  Login/Register #

@@ -75,7 +75,6 @@ def create_notification(note):
     if not models.group_exists(group_id):
         return gen_missing("group")
 
-
     valid = models.create_notification(user_id=user_id, group_id=group_id, note_type=note_type, status=status,  desc=desc)
     if valid is False:
         content = {
