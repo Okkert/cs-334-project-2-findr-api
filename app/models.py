@@ -361,6 +361,16 @@ def user_exists(user_id):
     return u is not None
 
 
+def group_exists(group_id):
+    g = session.query(Group).get(group_id)
+    return g is not None
+
+
+def note_exists(note_id):
+    n = session.query(Note).get(note_id)
+    return n is not None
+
+
 def insert_comment(post_id, user_id, comment_content):
     new_comment = Comment(post_id=post_id, user_id=user_id, comment_content=comment_content)
     session.add(new_comment)
@@ -798,9 +808,9 @@ def load_notification(user_id):
         return None
 
 
-def create_notification(user_id, desc, note_type, status, group_id=None):
+def create_notification(user_id, group_id, note_type, status, desc):
     try:
-        n = Note(user_id, group_id, type, status, desc)
+        n = Note(user_id, group_id, note_type, status, desc, datetime.now())
         session.add(n)
         session.commit()
         return True
@@ -811,6 +821,7 @@ def create_notification(user_id, desc, note_type, status, group_id=None):
 def delete_notification(note_id):
     try:
         n = session.query(Note).filter(Note.note_id == note_id).delete()
+        session.commit()
         return True
     except:
         return False
@@ -819,7 +830,8 @@ def delete_notification(note_id):
 def update_notification(note_id):
     try:
         n = session.query(Note).filter(Note.note_id == note_id).first()
-        n.status = True
+        n.note_status = True
+        session.commit()
         return True
     except:
         return False

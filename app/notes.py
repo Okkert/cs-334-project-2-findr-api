@@ -59,14 +59,24 @@ def create_notification(note):
 
     """
     try:
+        print(note)
         user_id = note["userId"]
         group_id = note["groupId"]
         status = False
         desc = note["desc"]
         note_type = note["note_type"]
     except KeyError:
+        print("params screwed up")
         return resp.RESP_INVALID
-    valid = models.create_notification(user_id=user_id, status=status, note_type=note_type, desc=desc, group_id=group_id)
+
+    if not models.user_exists(user_id):
+        return gen_missing("user")
+
+    if not models.group_exists(group_id):
+        return gen_missing("group")
+
+
+    valid = models.create_notification(user_id=user_id, group_id=group_id, note_type=note_type, status=status,  desc=desc)
     if valid is False:
         content = {
             "reason": "Internal server error"
@@ -109,16 +119,17 @@ def update_notification(note_id):
         JSON Response detailing the success or failure of reading the notification
 
     """
-    try:
-        status = models.update_notification(note_id)
-        if status is False:
-            content = {
-                "reason": "Internal server error"
-            }
-            return gen_response(resp.ERR_SERVER, content)
-        return gen_response(resp.OK)
-    except:
-        return gen_response(resp.ERR_SERVER, content)
+    #try:
+    if not models.note_exists(note_id):
+        return gen_missing("notification")
+
+    success = models.update_notification(note_id)
+    if success is False:
+        print("foo")
+        return resp.RESP_SERVER
+    return gen_response(resp.OK)
+    #except:
+    #    return gen_response(resp.ERR_SERVER)
 
 
 def load_notification(note_id):
@@ -136,7 +147,7 @@ def load_notification(note_id):
 
     """
     try:
-        n = load_notification(note_id)
+        n = models.load_notification(note_id)
 
         if n is None:
             return gen_missing("notification")
@@ -144,6 +155,7 @@ def load_notification(note_id):
         note_data = {
             "noteId": n.note_id,
             "userId": n.user_id,
+            "groupId": n.group_id,
             "status": n.note_status,
             "desc": n.note_desc,
             "time": n.note_birthday

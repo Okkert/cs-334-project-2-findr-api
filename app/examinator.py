@@ -1,7 +1,7 @@
-from .auth import register, login, logout
-from .utils.toolbox import debug_out, tattle, behaved
-from .utils import response_constants as resp
-from . import notes
+from findr.app.auth import register, login, logout
+from findr.app.utils.toolbox import debug_out, tattle, behaved
+from findr.app.utils import response_constants as resp
+from findr.app import notes
 
 username = "Dummy321"
 email = "dummy@fakemail.com"
