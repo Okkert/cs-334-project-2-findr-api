@@ -428,7 +428,7 @@ class Notification(APIView):
             if 'groupId' in request.query_params:
                 group_id = request.query_params['groupId']
             desc = request.query_params['desc']
-            note_type = request.query_params['note_type']
+            note_type = request.query_params['type']
             note = {
                 'userId': user_id,
                 'groupId': group_id,

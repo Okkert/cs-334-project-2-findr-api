@@ -58,26 +58,20 @@ def create_notification(note):
         JSON Response detailing the success or failure of notification creation
 
     """
-
     try:
         user_id = note["userId"]
+        group_id = note["groupId"]
         status = False
         desc = note["desc"]
         note_type = note["note_type"]
-        group_id = note["groupId"]
     except KeyError:
         return resp.RESP_INVALID
-
-    status = models.create_notification(user_id=user_id, status=status, note_type=note_type, desc=desc, group_id=group_id)
-    if status is False:
+    valid = models.create_notification(user_id=user_id, status=status, note_type=note_type, desc=desc, group_id=group_id)
+    if valid is False:
         content = {
             "reason": "Internal server error"
         }
         return resp.RESP_SERVER
-
-    content = {
-        "reason": "Note created"
-    }
     return resp.RESP_OK
 
 
