@@ -63,7 +63,7 @@ def create_notification(note):
         user_id = note["userId"]
         status = False
         desc = note["desc"]
-        note_type = note["type"]
+        note_type = note["note_type"]
         group_id = note["groupId"]
     except KeyError:
         return resp.RESP_INVALID
