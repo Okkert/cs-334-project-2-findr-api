@@ -3,7 +3,7 @@ from django.http import JsonResponse
 from rest_framework.response import Response
 from rest_framework.views import APIView
 
-from . import groups, posts, comments, auth, user, notes
+from . import groups, posts, comments, auth, user, notes, models
 from .auth import get_request_token
 from .utils.toolbox import gen_response
 from .utils import response_constants as resp
@@ -111,6 +111,64 @@ class DeleteUser(APIView):
         except KeyError:
             return invalid_response
         return user.delete_user(user_id)
+
+
+class LoadFeed(APIView):
+    def get(self, request, *args, **kwargs):
+        filter_params = {
+            "type": "Time"
+        }
+        try:
+            filter_type = request.query_params['type']
+            user_id = request.query_params['userId']
+
+            if filter_type == "Time":
+                filter_params = {
+                    "type": "Time",
+                    "userId": user_id
+                }
+
+            elif filter_type == "Location":
+                location = request.query_params["location"]
+                try:
+                    distance = request.query_params["distance"]
+                except KeyError:
+                    distance = 10
+
+                filter_params = {
+                    "type": "Location",
+                    "userId": user_id,
+                    "location": location,
+                    "distance": distance
+                }
+
+            elif filter_type == "Category":
+                category = request.query_params["category"]
+                filter_params = {
+                    "type": "Category",
+                    "userId": user_id,
+                    "category": category
+                }
+
+            elif filter_type == "User":
+                username = request.query_params["username"]
+                filter_params = {
+                    "type": "User",
+                    "userId": user_id,
+                    "username": username
+                }
+            elif filter_type == "Group":
+                group_id = request.query_params["groupId"]
+                filter_params = {
+                    "type": "Group",
+                    "userId": user_id,
+                    "groupId": group_id
+                }
+
+        except KeyError:
+            return invalid_response
+
+        return posts.load_feed(filter=filter_params)
 
 
 # ------------------- GROUPS ------------------- #

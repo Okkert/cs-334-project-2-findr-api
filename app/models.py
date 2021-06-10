@@ -94,15 +94,17 @@ class Post(Model):
     comments = relationship('Comment', backref="post")
     # Category enum
 
-    def __init__(self, user_id, group_id, post_title, post_desc, post_loc):
+    def __init__(self, user_id, group_id, post_title, post_desc, post_loc, post_cat):
         self.user_id = user_id
         self.post_title = post_title
         self.post_desc = post_desc
         self.post_loc = post_loc
         self.group_id = group_id
+        self.post_cat = post_cat
 
     def __repr__(self):
-        return f"Post( '{self.user_id}', '{self.group_id}', {self.post_title}', '{self.post_desc}', '{self.post_loc}')"
+        return f"Post( '{self.user_id}', '{self.group_id}', {self.post_title}', '{self.post_desc}', '{self.post_loc}', " \
+               f"'{self.post_cat}')"
 
 
 class Comment(Model):
@@ -433,13 +435,25 @@ def search_user_by_id(user_id):
         return False
 
 
-def create_post(user_id, group_id, post_title, post_body, post_location, post_cat):
+def search_user_by_username(username):
+    try:
+        u = session.query(User).filter(User.username == username).first()
+        if u is None:
+            return -1
+        return u
+    except:
+        return False
 
-    p = Post(user_id, group_id, post_title, post_body, post_location)
-    p.post_likes = 0
-    session.add(p)
-    session.commit()
-    return True
+
+def create_post(user_id, group_id, post_title, post_body, post_location, post_cat):
+    try:
+        p = Post(user_id, group_id, post_title, post_body, post_location)
+        p.post_likes = 0
+        session.add(p)
+        session.commit()
+        return True
+    except:
+        return False
 
 
 def remove_post(post_id):
@@ -489,7 +503,6 @@ def edit_post_category(post_id, post_category):
     return True
 
 
-# Still need to account for errors return False if commit is unsuccessful
 def load_post(post_id):
     try:
         p = session.query(Post).filter(Post.post_id == post_id).first()
@@ -526,15 +539,15 @@ def post_comment(post_id, user_id, comment_content):
 
 
 def remove_comments(post_id):
-        try:
-            c = session.query(Comment).filter(Comment.post_id == post_id)
-            if c.first() is None:
-                return True
-            c.delete()
-            session.commit()
+    try:
+        c = session.query(Comment).filter(Comment.post_id == post_id)
+        if c.first() is None:
             return True
-        except:
-            return False
+        c.delete()
+        session.commit()
+        return True
+    except:
+        return False
 
 
 def get_comments(post_id):
@@ -748,7 +761,7 @@ def delete_group_members(group_id):
 
 def load_join_request(group_id):
     try:
-        m = session.query(Member).filter(Member.membership == 0).all()
+        m = session.query(Member).filter(Member.membership == 0).filter(Member.group_id == group_id).all()
         return m
     except:
         return False
@@ -785,6 +798,29 @@ def decline_join_request(group_id, user_id):
         m.delete()
         session.commit()
         return True
+    except:
+        return False
+
+def get_users_groups(user_id):
+    try:
+        m = session.query(Member).filter(Member.user_id == user_id).filter(Member.membership != 0).all()
+        return m
+    except:
+        return False
+
+
+def get_posts_from_user(user_id, group_id):
+    try:
+        p = session.query(Post).filter(Post.user_id == user_id).filter(Post.group_id == group_id).all()
+        return p
+    except:
+        return False
+
+
+def get_posts_from_category(category, group_id):
+    try:
+        p = session.query(Post).filter(Post.post_cat == category).filter(Post.group_id == group_id).all()
+        return p
     except:
         return False
 

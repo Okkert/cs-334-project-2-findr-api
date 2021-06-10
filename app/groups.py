@@ -477,9 +477,12 @@ def load_group_posts(group_id):
                 "avatar": "/path/to/avatar"  # TODO
             },
             "title": post.post_title,
-            "postCategory": post.post_cat,
+            "postCategory": str(repr(models.catEnum(post.post_cat))).split("'")[1],
             "likes": post.post_likes,
             "postComments": comment_data,
+            "postContent": post.post_desc,
+            "postTime": post.post_time,
+            "postLocation": post.post_loc,
         })
     content = {
         "posts": post_data

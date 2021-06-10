@@ -6,7 +6,7 @@
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
     <!-- CSS only -->
 <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.0.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-+0n0xVW2eSR5OomGNYDnhzAbDsOXxcvSN1TPprVMTNDbiYZCxYbOOl7+AMvyTG2x" crossorigin="anonymous">
-    <title>Findr API</title>
+    <title>Index</title>
 </head>
 <body class="container p-3">
     <br>
@@ -18,6 +18,14 @@
         <li>/api/login_user/?username=FooFighter&email=foo@gmail.com&password=Password1234567890!&remember=True</li>
         <li>/api/load_user/?userId=1</li>
         <li>/api/update_user/?userId=3&username=OptionalUsername&email=OptionalEmail&bio=OptionalBio&password=Password1234567890!</li>
+        <p>Load Feed</p>
+        <ul>
+            <li>Time: /api/load_feed/?type=Time&userId=16</li>
+            <li>Location (Distance is optional): /api/load_feed/?type=Location&userId=16&location=Melkbos&distance=100</li>
+            <li>Category: /api/load_feed/?type=Category&userId=16&category=Lego</li>
+            <li>Group: /api/load_feed/?type=Group&userId=16&groupId=18</li>
+            <li>User: /api/load_feed/?type=User&userId=16&username=user_1</li>
+        </ul>
     </ul>
     <h5>Group API</h5>
     <p>Group CRUD Operations</p>

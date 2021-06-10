@@ -4,6 +4,7 @@ from django.test import TestCase
 # from . import posts
 import findr.app.posts as posts
 import findr.app.groups as groups
+import findr.app.auth as auth
 
 
 # ---------------------------- POSTS TESTS ------------------------------- #
@@ -25,10 +26,10 @@ def test_create_post(mode, group_id, user_id):
                 "username": "Swingeon\n",
                 "avatar": "path/to/jane42.png\n"
             },
-            "title": "Happy Birthday to Me",
-            "postContent": "Why did no one show up to my Spur birthday",
+            "title": "Test 1",
+            "postContent": "Description 1",
             "location": "Stellenbosch",
-            "category": "Hot tub"
+            "category": "Hot"
         }
     elif mode == 2:
         post = {
@@ -339,16 +340,21 @@ def test_decline_join_request(mode, group_id, user_id):
 def test_load_notification():
     return True
 
+
 # TODO
 def test_create_notification():
     return True
 
+
 # TODO
 def test_delete_notification():
     return True
+
 
 # TODO
 def test_update_notification():
     return True
 
 
+# ---------------------------- FEED TESTS ------------------------------- #
+# TODO
