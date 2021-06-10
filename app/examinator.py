@@ -1,6 +1,7 @@
-from findr.app.auth import register, login, logout
-from findr.app.utils.toolbox import debug_out, tattle, behaved
-from findr.app.utils import response_constants as resp
+from .auth import register, login, logout
+from .utils.toolbox import debug_out, tattle, behaved
+from .utils import response_constants as resp
+from . import notes
 
 username = "Dummy321"
 email = "dummy@fakemail.com"
@@ -61,4 +62,11 @@ def test_auth():
         debug_out(board)
 
 
+print(notes.create_notification(
+    {
+        "userId": 1,
+        "groupId": 1,
+        "desc": "You have a friend invite!",
+        "note_type": 1
+    }))
 

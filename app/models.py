@@ -290,7 +290,7 @@ def search_group(group_name):
 # Input - user_id (prim.key) and auth_token
 # Return: True if user is there and stores auth token, else False
 def store_token(user_id, token):
-    u = session.get(user_id)
+    u = session.query(User).get(user_id)
     if u == None:
         return False
     else:
@@ -304,7 +304,7 @@ def store_token(user_id, token):
 # Return True if user and auth_token = tok, else False
 def remove_token(user_id, token):
     print("user_id ", user_id)
-    u = session.get(user_id)
+    u = session.query(User).get(user_id)
     if u == None:
         return False
     else:
@@ -321,7 +321,7 @@ def remove_token(user_id, token):
 # Input - user_id (p.key)
 # Return auth tok if True, else empty string
 def fetch_token(user_id):
-    u = session.get(user_id)
+    u = session.query(User).get(user_id)
     if u == None:
         return None
     else:
@@ -332,7 +332,7 @@ def fetch_token(user_id):
 # Input - user_id (p.key)
 # Output, User object if true, else None type
 def search_user(user_id):
-    u = session.get(user_id)
+    u = session.query(User).get(user_id)
     return u
 
 
@@ -352,12 +352,12 @@ def search_user_email(email):
 # COMMENTS
 # -------------------------------
 def post_exists(post_id):
-    p = session.get(post_id)
+    p = session.query(Post).get(post_id)
     return p is not None
 
 
 def user_exists(user_id):
-    u = session.get(user_id)
+    u = session.query(User).get(user_id)
     return u is not None
 
 
@@ -369,7 +369,7 @@ def insert_comment(post_id, user_id, comment_content):
 
 
 def load_comment(comment_id):
-    c = session.get(comment_id)
+    c = session.query(Comment).get(comment_id)
     return c
 
 

@@ -29,5 +29,5 @@ urlpatterns = [
     # ------------------ COMMENT ------------------ #
     path('comment/', views.Comment.as_view(), name="comment"),
     # ------------------ NOTIFICATIONS ------------------ #
-    path('note/', views.Notification.as_view(), name="note"),
+    path('note/', views.Notification.as_view(), name="note")
 ]
