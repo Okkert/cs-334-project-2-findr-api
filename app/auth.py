@@ -341,7 +341,11 @@ def login(username, email, password, remember_me):
     # Verify password
     if sha256_crypt.verify(password, user.password):
         token_resp = gen_token(user.user_id, password, not remember_me)
-        return gen_response(resp.OK, token_resp)
+        data = {
+            'token': token_resp,
+            'user_id': user.user_id
+        }
+        return gen_response(resp.OK, data)
     else:
         return gen_response(resp.ERR_INVALID, {"reason": "Invalid password"})
     #except:
