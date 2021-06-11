@@ -38,15 +38,11 @@
     </ul>
     <p>Other Group Operations</p>
     <ul>
-<!--        <li>/api/create_group/?title=My_Title&description=My_description&private=True</li>-->
-<!--        <li>/api/edit_group/?groupId=13&title=My_Title&description=My_description&private=True</li>-->
         <li>/api/leave_group/?userId=2&groupId=11</li>
-<!--        <li>/api/delete_group/?groupId=12</li>-->
         <li>/api/join_group/?userId=2&groupId=13</li>
-<!--        <li>/api/load_group/?groupId=13</li>-->
-        <li>/api/load_group_posts/?groupId=13</li>
+        <li>/api/load_group_posts/?groupId=13&userId=16</li>
         <li>/api/load_group_members/?groupId=13</li>
-        <li>/api/search_groups/?title=hot+tub</li>
+        <li>/api/search_groups/?search=hot+tub</li>
         <li>/api/promote_member/?groupId=13&userId=2&promoteId=3</li>
         <li>/api/demote_member/?groupId=13&userId=2&demoteId=3</li>
         <li>/api/load_join_request/?groupId=13</li>
@@ -66,14 +62,14 @@
     <ul>
         <li>/api/like_post/?userId=2&postId=13</li>
     </ul>
-    <p>Comment API</p>
+    <h5>Comment API</h5>
     <ul>
         <li>Create - POST: /api/comment/?postId=1&userId=1&content=You+look+terrifying</li>
         <li>Read   - GET: /api/comment/?commentId=1</li>
         <li>Update - PUT: /api/comment/?commentId=1&content=You+look+so+cute</li>
         <li>Delete - DELETE: /api/comment/?commentId=1</li>
     </ul>
-    <p>Note API</p>
+    <h5>Note API</h5>
     <ul>
         <li>Create - POST: /api/note/?userId=1&groupId=14&type=0&desc=You+have+a+friend+invite</li>
         <li>Read   - GET: /api/note/?noteId=1</li>
