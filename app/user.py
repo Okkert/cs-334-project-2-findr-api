@@ -29,6 +29,26 @@ REL_FRIEND = 1
 #  -  -  -  -  #
 
 
+def get_user_id(username):
+    user = models.search_user_by_username(username)
+
+    if user is False:
+        content = {
+            "reason": "Internal server error"
+        }
+        return gen_response(resp.ERR_SERVER, content)
+    elif user == -1:
+        content = {
+            "reason": "User not found"
+        }
+        return gen_response(resp.ERR_MISSING, content)
+
+    content ={
+        "userId": user.user_id
+    }
+    return gen_response(resp.OK, content)
+
+
 def load_user(user_id):
     """Gets a user's info from the database
 

@@ -171,6 +171,16 @@ class LoadFeed(APIView):
         return posts.load_feed(filter=filter_params)
 
 
+class LoadUserId(APIView):
+    def get(self, request):
+        try:
+            username = request.query_params['username']
+        except KeyError:
+            return invalid_response
+
+        return user.get_user_id(username=username)
+
+
 # ------------------- GROUPS ------------------- #
 
 class Group(APIView):

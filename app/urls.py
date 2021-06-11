@@ -11,6 +11,7 @@ urlpatterns = [
     path('load_user/', views.LoadUser.as_view(), name="load_user"),
     path('update_user/', views.UpdateUser.as_view(), name="update_user"),
     path('load_feed/', views.LoadFeed.as_view(), name="load_feed"),
+    path('load_userId/', views.LoadUserId.as_view(), name="load_user_id"),
     # ------------------- GROUPS ------------------- #
     path('group/', views.Group.as_view(), name="group"),
     path('leave_group/', views.LeaveGroup.as_view(), name="leave_group"),
