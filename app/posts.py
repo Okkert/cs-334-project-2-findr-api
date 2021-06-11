@@ -19,8 +19,6 @@ def create_post(post):
         <groupId> : int
         <author> : dict
             <userId> : int
-            <username> : str
-            <avatar> : str
         <title> : str
         <postContent> : str
         <location> : str
@@ -132,7 +130,7 @@ def remove_post(post_id, user_id):
     }
     return gen_response(resp.OK, content)
 
-
+# FIXME
 # Function Status: Complete and tested
 def edit_post(post, user_id):
     """Edits group info
@@ -141,9 +139,6 @@ def edit_post(post, user_id):
     ----------
     post : dict
         <postId> : int
-        <groupId> : int
-        <author> : dict
-            <userId> : int
         <title> : str
         <postContent> : str
 
@@ -158,7 +153,6 @@ def edit_post(post, user_id):
     """
     try:
         post_id = post["postId"]
-        author_id = post["author"]["userId"]
         post_title = post["title"]
         post_content = post["postContent"]
     except KeyError:
@@ -167,25 +161,49 @@ def edit_post(post, user_id):
         }
         return gen_response(resp.ERR_INVALID, content)
 
-    if author_id != user_id:
+    # Load post to get post author
+    post_data = models.load_post(post_id=post_id)
+
+    if post_data is False:
+        content = {
+            "reason": "Internal server error"
+        }
+        return gen_response(resp.ERR_SERVER, content)
+    elif post_data is None:
+        content = {
+            "reason": "Post not found, check that post ID is correct"
+        }
+        return gen_response(resp.ERR_MISSING, content)
+
+    if post_data.user_id != user_id:
         content = {
             "reason": "User does not have permissions to delete this post"
         }
         return gen_response(resp.ERR_UNAUTH, content)
 
     status = models.edit_post_title(post_id=post_id, post_title=post_title)
-    if not status:
+    if status == -1:
         content = {
-            "reason": "Post not found"
+            "reason": "Post not found, check that post ID is correct"
         }
         return gen_response(resp.ERR_MISSING, content)
+    elif status is False:
+        content = {
+            "reason": "Internal server error"
+        }
+        return gen_response(resp.ERR_SERVER, content)
 
     status = models.edit_post_desc(post_id=post_id, post_desc=post_content)
-    if not status:
+    if status == -1:
         content = {
-            "reason": "Post not found"
+            "reason": "Post not found, check that post ID is correct"
         }
         return gen_response(resp.ERR_MISSING, content)
+    elif status is False:
+        content = {
+            "reason": "Internal server error"
+        }
+        return gen_response(resp.ERR_SERVER, content)
 
     content = {
         "reason": "Success"
@@ -291,7 +309,7 @@ def post_comment(post_id, comment):
 # Function Status: Basic implementation, tested
 # TODO: Get path to avatar
 # TODO: Return whether the user has liked the post
-def load_post(post_id):
+def load_post(post_id, user_id):
     """Loads post information
 
     Parameters
