@@ -9,7 +9,6 @@ API_KEY = "AIzaSyC8GoiY01oowA5Z9rCJGeC2XU40H14Zc2s"
 
 
 # Function Status: Complete and tested
-# TODO: Add category
 def create_post(post):
     """ Creates a new group and sets the creator as admin
 
@@ -305,7 +304,6 @@ def post_comment(post_id, comment):
 
 
 # Function Status: Basic implementation, tested
-# TODO: Get path to avatar
 def load_post(post_id, user_id):
     """Loads post information
 
@@ -332,7 +330,7 @@ def load_post(post_id, user_id):
         return gen_response(resp.ERR_MISSING, content)
     elif post is False:
         content = {
-            "reason": "Internal server error"
+            "reason": "Internal server error trying to load post"
         }
         return gen_response(resp.ERR_SERVER, content)
 
@@ -345,7 +343,7 @@ def load_post(post_id, user_id):
         return gen_response(resp.ERR_MISSING, content)
     elif user is False:
         content = {
-            "reason": "Internal server error"
+            "reason": "Internal server error trying to load user"
         }
         return gen_response(resp.ERR_SERVER, content)
 
@@ -353,7 +351,7 @@ def load_post(post_id, user_id):
 
     if has_liked == -1:
         content = {
-            "reason": "Internal server error"
+            "reason": "Internal server error fetching liked posts"
         }
         return gen_response(resp.ERR_SERVER, content)
 
@@ -361,7 +359,7 @@ def load_post(post_id, user_id):
     post_comments = []
     if comments is False:
         content = {
-            "reason": "Internal server error"
+            "reason": "Internal server error fetching comments"
         }
         return gen_response(resp.ERR_SERVER, content)
     elif comments is not None:
@@ -374,7 +372,7 @@ def load_post(post_id, user_id):
                 return gen_response(resp.ERR_MISSING, content)
             elif commenter is False:
                 content = {
-                    "reason": "Internal server error"
+                    "reason": "Internal server error fetching commenter"
                 }
                 return gen_response(resp.ERR_SERVER, content)
 
@@ -382,19 +380,19 @@ def load_post(post_id, user_id):
                 "author": {
                     "userId": comment.user_id,
                     "username": commenter.username,
-                    "avatar": "path/to/avatar"
+                    "avatar": commenter.avatar
                 },
                 "commentContent": comment.comment_content,
                 "commentTime": comment.comment_time,
             })
 
     content = {
-        "groupId": 11,  # FIXME: Need to add group_id column to db
+        "groupId": post.group_id,
         "postId": post_id,
         "author": {
             "userId": post.user_id,
             "username": user.username,
-            "avatar": "path/to/avatar"  # TODO: Add path to avatar
+            "avatar": user.avatar
         },
         "title": post.post_title,
         "postContent": post.post_desc,
@@ -408,7 +406,7 @@ def load_post(post_id, user_id):
     return gen_response(resp.OK, content)
 
 
-def load_feed(filter):
+def load_feed(filter_params):
     """
         filter: dict
             userId : int
@@ -422,8 +420,8 @@ def load_feed(filter):
     """
 
     try:
-        filter_type = filter["type"]
-        user_id = filter["userId"]
+        filter_type = filter_params["type"]
+        user_id = filter_params["userId"]
     except KeyError:
         content = {
             "reason": "Invalid request"
@@ -432,6 +430,7 @@ def load_feed(filter):
 
     # --------------------- PREAMBLE --------------------- #
     user_feed = []
+    user_groups = None
     if filter_type == "Time" or filter_type == "Location" or filter_type == "Category" or filter_type == "User":
         user_groups = models.get_users_groups(user_id=user_id)
         if user_groups is None:
@@ -471,9 +470,9 @@ def load_feed(filter):
     # Returns posts within the specified distance of input location
     if filter_type == "Location":
         try:
-            location = filter["location"]
+            location = filter_params["location"]
             try:
-                distance = float(filter["distance"])
+                distance = float(filter_params["distance"])
             except KeyError:
                 distance = 10.0
         except KeyError:
@@ -503,13 +502,12 @@ def load_feed(filter):
         }
         return gen_response(resp.OK, content)
 
-
     # --------------------- CATEGORY --------------------- #
     # Get all posts from that category and check if the user is in the group of the category
     if filter_type == "Category":
         try:
             try:
-                category = models.catEnum(filter["category"])
+                category = models.catEnum(filter_params["category"])
             except ValueError:
                 content = {
                     "reason": "Invalid category selected"
@@ -536,12 +534,11 @@ def load_feed(filter):
         }
         return gen_response(resp.OK, content)
 
-
     # --------------------- USER --------------------- #
     # Returns all post made by the input user within the searching users groups
     if filter_type == "User":
         try:
-            username = filter["username"]
+            username = filter_params["username"]
         except KeyError:
             content = {
                 "reason": "Invalid Request"
@@ -579,7 +576,7 @@ def load_feed(filter):
     # --------------------- GROUP --------------------- #
     if filter_type == "Group":
         try:
-            group_id = filter["groupId"]
+            group_id = filter_params["groupId"]
         except KeyError:
             content = {
                 "reason": "Invalid Request"
@@ -691,7 +688,7 @@ def format_posts(posts, user_id):
                 "author": {
                     "userId": author.user_id,
                     "username": author.username,
-                    "avatar": "/path/to/avatar"  # TODO
+                    "avatar": user.avatar
                 },
                 "commentContent": comment.comment_content,
                 "commentTime": comment.comment_time,
@@ -704,7 +701,7 @@ def format_posts(posts, user_id):
             "author": {
                 "userId": post.user_id,
                 "username": user.username,
-                "avatar": "/path/to/avatar"  # TODO
+                "avatar": user.avatar
             },
             "title": post.post_title,
             "postCategory": str(repr(models.catEnum(post.post_cat))).split("'")[1],
@@ -727,6 +724,9 @@ def load_group_posts(group_id, user_id):
     group_id : int
         ID of group to load posts from
 
+    user_id : int
+        ID of user we are loading posts for
+
     Returns
     -------
     dict
@@ -744,7 +744,7 @@ def load_group_posts(group_id, user_id):
     posts = models.load_group_posts(group_id=group_id)
     if posts is False:
         content = {
-            "reason": "Internal server error",
+            "reason": "Internal server error trying to load post",
             "code": resp.ERR_SERVER
 
         }
@@ -762,7 +762,7 @@ def load_group_posts(group_id, user_id):
                     "author": {
                         "userId": author.user_id,
                         "username": author.username,
-                        "avatar": "/path/to/avatar"  # TODO
+                        "avatar": author.avatar
                     },
                     "commentContent": comment.comment_content,
                     "commentTime": comment.comment_time,
@@ -771,7 +771,7 @@ def load_group_posts(group_id, user_id):
 
         if user is False:
             content = {
-                "reason": "Internal server error",
+                "reason": "Internal server error with user",
                 "code": resp.ERR_SERVER
             }
             return content
@@ -787,7 +787,7 @@ def load_group_posts(group_id, user_id):
 
         if has_liked == -1:
             content = {
-                "reason": "Internal server error"
+                "reason": "Internal server error with has liked"
             }
             return gen_response(resp.ERR_SERVER, content)
 
@@ -797,7 +797,7 @@ def load_group_posts(group_id, user_id):
             "author": {
                 "userId": post.user_id,
                 "username": user.username,
-                "avatar": "/path/to/avatar"  # TODO
+                "avatar": user.avatar
             },
             "title": post.post_title,
             "postCategory": str(repr(models.catEnum(post.post_cat))).split("'")[1],
