@@ -396,18 +396,17 @@ class Post(APIView):
     def get(self, request, *args, **kwargs):
         try:
             post_id = request.query_params["postId"]
+            user_id = request.query_params["userId"]
         except KeyError:
             return invalid_response
 
-        return posts.load_post(post_id)
+        return posts.load_post(post_id=post_id, user_id=user_id)
 
     # Edit post
     def put(self, request, *args, **kwargs):
         try:
             post_id = request.query_params["postId"]
-            group_id = request.query_params["groupId"]
             user_id = request.query_params["userId"]
-            author_id = request.query_params["authorId"]
             post_title = request.query_params["title"]
             post_content = request.query_params["postContent"]
         except KeyError:
@@ -415,10 +414,6 @@ class Post(APIView):
 
         post = {
             "postId": post_id,
-            "groupId": group_id,
-            "author": {
-                "userId": author_id
-            },
             "title": post_title,
             "postContent": post_content
         }
