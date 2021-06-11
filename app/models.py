@@ -163,6 +163,7 @@ class Note(Model):
     note_id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('user.user_id'))
     group_id = Column(Integer, ForeignKey('group.group_id')) # Needed for loading all group requests
+    subject_id = Column(Integer, ForeignKey('user.user_id')) # Needed for subjects
     note_type = Column(Enum(noteType))  # 0 = friends; 1 = groups Enum
     note_status = Column(Boolean, nullable=False)  # true = read, false = unread
     note_desc = Column(String)
@@ -182,9 +183,10 @@ class Note(Model):
 
 class Friend(Model):
     __tablename__ = 'friend'
-    user_id = Column(Integer, primary_key=True)
-    friend_id = Column(Integer, ForeignKey('user.user_id'))
-    rel_status = Column(Boolean, nullable=False)  # true = accepted; false = pending
+    rel_id = Column(Integer, primary_key=True)
+    user_a = Column(Integer, ForeignKey('user.user_id'))
+    user_b = Column(Integer, ForeignKey('user.user_id'))
+    rel_type = Column(Boolean, nullable=False)  # False = Pending, True = Accepted
 
     def __init__(self, user_id, friend_id, rel_status):
         self.user_id = user_id
@@ -193,6 +195,20 @@ class Friend(Model):
 
     def __repr__(self):
         return f"Friend( '{self.user_id}', '{self.friend_id}', '{self.rel_status}')"
+
+
+class Like(Model):
+    __tablename__ = 'like'
+    like_id = Column(Integer, primary_key=True)
+    post_id = Column(Integer, ForeignKey('post.post_id'))
+    user_id = Column(Integer, ForeignKey('user.user_id'))
+
+    def __init__(self, post_id, user_id):
+        self.post_id = post_id
+        self.user_id = user_id
+
+    def __repr__(self):
+        return f"Like( '{self.post_id}', '{self.user_id}')"
 
 
 def commit_changes():
@@ -425,6 +441,16 @@ session = Session()
 # Helper Function's for posts.py
 # -------------------------------
 
+def has_liked(user_id, post_id):
+    try:
+        l = session.query(Like).filter(Like.user_id == user_id).filter(Like.post_id == post_id).first()
+        if l is None:
+            return False
+        return True
+    except:
+        return -1
+
+
 def search_user_by_id(user_id):
     try:
         u = session.query(User).get(user_id)
@@ -467,22 +493,28 @@ def remove_post(post_id):
 
 # Still need to account for errors return False if commit is unsuccessful
 def edit_post_desc(post_id, post_desc):
-    p = session.query(Post).filter(Post.post_id == post_id).first()
-    if p is None:
+    try:
+        p = session.query(Post).filter(Post.post_id == post_id).first()
+        if p is None:
+            return False
+        p.post_desc = post_desc
+        session.commit()
+        return True
+    except:
         return False
-    p.post_desc = post_desc
-    session.commit()
-    return True
 
 
 # Still need to account for errors return False if commit is unsuccessful
 def edit_post_title(post_id, post_title):
-    p = session.query(Post).filter(Post.post_id == post_id).first()
-    if p is None:
+    try:
+        p = session.query(Post).filter(Post.post_id == post_id).first()
+        if p is None:
+            return -1
+        p.post_title = post_title
+        session.commit()
+        return True
+    except:
         return False
-    p.post_title = post_title
-    session.commit()
-    return True
 
 
 def edit_post_location(post_id, post_location):
@@ -511,12 +543,14 @@ def load_post(post_id):
         return False
 
 
-def like_post(post_id):
+def like_post(post_id, user_id):
     try:
         p = session.query(Post).filter(Post.post_id == post_id).first()
         if p is None:
             return False
         p.post_likes += 1
+        l = Like(post_id=post_id, user_id=user_id)
+        session.add(l)
         session.commit()
         return True
     except:
