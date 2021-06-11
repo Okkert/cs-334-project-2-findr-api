@@ -12,7 +12,7 @@
     <br>
     <h3>Welcome to the CS334 Project 3 Findr API Routes</h3>
     <p>API Routes: </p>
-    <p>User API</p>
+    <h5>User API</h5>
     <ul>
         <li>/api/register_user/?username=FooFighter&email=foo@gmail.com&password=Password1234567890!</li>
         <li>/api/login_user/?username=FooFighter&email=foo@gmail.com&password=Password1234567890!&remember=True</li>
@@ -21,42 +21,42 @@
         <li>/api/load_userId/?username=user_1</li>
         <p>Load Feed</p>
         <ul>
-            <li>Time: /api/load_feed/?type=Time&userId=16</li>
-            <li>Location (Distance is optional): /api/load_feed/?type=Location&userId=16&location=Melkbos&distance=100</li>
-            <li>Category: /api/load_feed/?type=Category&userId=16&category=Lego</li>
-            <li>Group: /api/load_feed/?type=Group&userId=16&groupId=18</li>
-            <li>User: /api/load_feed/?type=User&userId=16&username=user_1</li>
+            <li>Time: /api/load_feed/?type=Time&userId=2</li>
+            <li>Location (Distance is optional): /api/load_feed/?type=Location&userId=2&location=Melkbos&distance=100</li>
+            <li>Category: /api/load_feed/?type=Category&userId=2&category=Lego</li>
+            <li>Group: /api/load_feed/?type=Group&userId=2&groupId=30</li>
+            <li>User: /api/load_feed/?type=User&userId=2&username=swinger_1</li>
         </ul>
     </ul>
     <h5>Group API</h5>
     <p>Group CRUD Operations</p>
     <ul>
-        <li>Create - POST: /api/group/?title=My_Title&description=My_description&private=True</li>
-        <li>Read   - GET: /api/group/?groupId=13</li>
-        <li>Update - PUT: /api/group/?groupId=13&title=My_Title&description=My_description&private=True</li>
-        <li>Delete - DELETE: /api/group/?groupId=12</li>
+        <li>Create - POST: /api/group/?title=My_Title&description=My_description&private=True&userId=2</li>
+        <li>Read   - GET: /api/group/?groupId=28</li>
+        <li>Update - PUT: /api/group/?groupId=28&title=My_Title&description=My_description&private=True</li>
+        <li>Delete - DELETE: /api/group/?groupId=25</li>
     </ul>
     <p>Other Group Operations</p>
     <ul>
-        <li>/api/leave_group/?userId=2&groupId=11</li>
-        <li>/api/join_group/?userId=2&groupId=13</li>
-        <li>/api/load_group_posts/?groupId=13&userId=16</li>
-        <li>/api/load_group_members/?groupId=13</li>
+        <li>/api/leave_group/?userId=2&groupId=29</li>
+        <li>/api/join_group/?userId=2&groupId=29</li>
+        <li>/api/load_group_posts/?groupId=30&userId=2</li>
+        <li>/api/load_group_members/?groupId=28</li>
         <li>/api/search_groups/?search=hot+tub</li>
-        <li>/api/promote_member/?groupId=13&userId=2&promoteId=3</li>
-        <li>/api/demote_member/?groupId=13&userId=2&demoteId=3</li>
-        <li>/api/load_join_request/?groupId=13</li>
-        <li>/api/request_join_group/?groupId=13&userId=2</li>
-        <li>/api/accept_join_request/?groupId=13&userId=2</li>
-        <li>/api/decline_join_request/?groupId=13&userId=2</li>
+        <li>/api/promote_member/?groupId=29&userId=2&promoteId=3</li>
+        <li>/api/demote_member/?groupId=29&userId=2&demoteId=3</li>
+        <li>/api/load_join_request/?groupId=29</li>
+        <li>/api/request_join_group/?groupId=29&userId=2</li>
+        <li>/api/accept_join_request/?groupId=29&userId=2</li>
+        <li>/api/decline_join_request/?groupId=29&userId=2</li>
     </ul>
     <h5>Post API</h5>
     <p>Post CRUD Operations</p>
     <ul>
         <li>Create - POST: /api/post/?userId=2&groupId=18&title=Bush+Babies&postContent=I+love+bush+babies&location=Melkbos&category=Other</li>
-        <li>Read   - GET: /api/post/?postId=13&userId=16</li>
-        <li>Update - PUT: /api/post/?postId=16&userId=16&title=My_Title&postContent=My_description</li>
-        <li>Delete - DELETE: /api/post/?postId=16&userId=16</li>
+        <li>Read   - GET: /api/post/?postId=18&userId=2</li>
+        <li>Update - PUT: /api/post/?postId=19&userId=2&title=My_Title&postContent=My_description</li>
+        <li>Delete - DELETE: /api/post/?postId=19&userId=2</li>
     </ul>
     <p>Other Post Operations</p>
     <ul>
