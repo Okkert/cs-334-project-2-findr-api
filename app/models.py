@@ -473,7 +473,7 @@ def search_user_by_username(username):
 
 def create_post(user_id, group_id, post_title, post_body, post_location, post_cat):
     try:
-        p = Post(user_id, group_id, post_title, post_body, post_location)
+        p = Post(user_id, group_id, post_title, post_body, post_location, post_cat)
         p.post_likes = 0
         session.add(p)
         session.commit()
@@ -705,7 +705,7 @@ def leave_group(group_id, user_id):
 
 def search_groups_by_name(search_term):
     try:
-        m = session.query(Group).filter(Group.group_name.contains(search_term))
+        m = session.query(Group).filter(Group.group_name.contains(search_term)).all()
         return m
     except:
         return False
@@ -713,7 +713,7 @@ def search_groups_by_name(search_term):
 
 def search_groups_by_desc(search_term):
     try:
-        m = session.query(Group).filter(Group.group_desc.contains(search_term))
+        m = session.query(Group).filter(Group.group_desc.contains(search_term)).all()
         return m
     except:
         return False
