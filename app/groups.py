@@ -166,11 +166,17 @@ def edit_group(group):
         return gen_response(resp.ERR_INVALID, content)
 
     g = models.search_group_by_id(group_id)
-    if g is False:
+    if g is None:
         content = {
             "reason": "Group not found"
         }
         return gen_response(resp.ERR_MISSING, content)
+
+    elif g is False:
+        content = {
+            "reason": "Internal server error"
+        }
+        return gen_response(resp.ERR_SERVER, content)
 
     if g.private != updated_private:
         status = models.update_group_private(group_id=group_id, updated_private=updated_private)
@@ -233,6 +239,18 @@ def join_group(user_id, group_id):
         }
         return gen_response(resp.ERR_SERVER, content)
 
+    group = models.search_group_by_id(group_id=group_id)
+    if group is None:
+        content = {
+            "reason": "Group not found"
+        }
+        return gen_response(resp.ERR_MISSING, content)
+    elif group is False:
+        content = {
+            "reason": "Internal server error"
+        }
+        return gen_response(resp.ERR_SERVER, content)
+
     status = models.join_group(group_id=group_id, user_id=user.user_id, membership=1)
 
     if not status:
@@ -268,11 +286,10 @@ def leave_group(user_id, group_id):
 
     # If user is the only admin then leave request will be denied
     admins = models.get_group_admins(group_id=group_id)
-    print(admins)
     member = models.get_group_member(user_id=user_id, group_id=group_id)
     if admins is False or member is False:
         content = {
-            "reason": "Internal server error"
+            "reason": "Internal server error encountered when trying to get user membership status"
         }
         return gen_response(resp.ERR_SERVER, content)
 
@@ -296,7 +313,7 @@ def leave_group(user_id, group_id):
         return gen_response(resp.ERR_MISSING, content)
     elif user is False:
         content = {
-            "reason": "Internal server error"
+            "reason": "Internal server error encountered when trying to locate user"
         }
         return gen_response(resp.ERR_SERVER, content)
 
@@ -304,7 +321,7 @@ def leave_group(user_id, group_id):
 
     if status is False:
         content = {
-            "reason": "Internal server error"
+            "reason": "Internal server error encountered when trying to leave group"
         }
         return gen_response(resp.ERR_SERVER, content)
     elif status == -1:
