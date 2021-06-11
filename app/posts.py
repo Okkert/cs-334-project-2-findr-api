@@ -176,7 +176,7 @@ def edit_post(post, user_id):
 
     if post_data.user_id != user_id:
         content = {
-            "reason": "User does not have permissions to delete this post"
+            "reason": "User does not have permissions to edit this post"
         }
         return gen_response(resp.ERR_UNAUTH, content)
 
