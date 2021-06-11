@@ -202,6 +202,7 @@ class Group(APIView):
             title = request.query_params["title"]
             description = request.query_params["description"]
             private = bool(request.query_params["private"])
+            user_id = request.query_params["userId"]
         except KeyError:
             content = {
                 "reason": "Invalid Request"
@@ -214,7 +215,7 @@ class Group(APIView):
             'private': private
         }
 
-        return groups.create_group(group)
+        return groups.create_group(group, user_id=user_id)
 
     # Delete Group
     def delete(self, request, *args, **kwargs):
@@ -270,7 +271,7 @@ class JoinGroup(APIView):
 class SearchGroups(APIView):
     def get(self, request, *args, **kwargs):
         try:
-            search_term = request.query_params["title"]
+            search_term = request.query_params["search"]
         except KeyError:
             return invalid_response
 
@@ -281,10 +282,11 @@ class LoadGroupPosts(APIView):
     def get(self, request, *args, **kwargs):
         try:
             group_id = request.query_params["groupId"]
+            user_id = request.query_params["userId"]
         except KeyError:
             return invalid_response
 
-        return groups.load_group_posts(group_id)
+        return groups.load_group_posts(group_id, user_id)
 
 
 class LoadGroupMembers(APIView):
