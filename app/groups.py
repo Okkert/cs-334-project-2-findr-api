@@ -275,7 +275,7 @@ def leave_group(user_id, group_id):
             "reason": "Internal server error"
         }
         return gen_response(resp.ERR_SERVER, content)
-    
+
     if member is None:
         content = {
             "reason": "User is not a member of the group"
@@ -416,13 +416,16 @@ def search_groups(search_term):
 
 # Function Status: Complete and tested
 # TODO: Avatar
-def load_group_posts(group_id):
+def load_group_posts(group_id, user_id):
     """Loads all posts sent by group members
 
     Parameters
     ----------
     group_id : int
         ID of group to load posts from
+
+    user_id : int
+        ID of the user
 
     Returns
     -------
@@ -474,6 +477,14 @@ def load_group_posts(group_id):
             }
             return gen_response(resp.ERR_MISSING, content)
 
+        has_liked = models.has_liked(user_id=user_id, post_id=post.post_id)
+
+        if has_liked == -1:
+            content = {
+                "reason": "Internal server error"
+            }
+            return gen_response(resp.ERR_SERVER, content)
+
         post_data.append({
             "postId": post.post_id,
             "groupId": post.group_id,
@@ -485,6 +496,7 @@ def load_group_posts(group_id):
             "title": post.post_title,
             "postCategory": str(repr(models.catEnum(post.post_cat))).split("'")[1],
             "likes": post.post_likes,
+            "hasLiked": has_liked,
             "postComments": comment_data,
             "postContent": post.post_desc,
             "postTime": post.post_time,
