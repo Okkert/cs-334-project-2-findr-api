@@ -168,7 +168,7 @@ class LoadFeed(APIView):
         except KeyError:
             return invalid_response
 
-        return posts.load_feed(filter=filter_params)
+        return posts.load_feed(filter_params=filter_params)
 
 
 class LoadUserId(APIView):
