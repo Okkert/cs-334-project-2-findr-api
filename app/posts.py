@@ -130,7 +130,7 @@ def remove_post(post_id, user_id):
     }
     return gen_response(resp.OK, content)
 
-# FIXME
+
 # Function Status: Complete and tested
 def edit_post(post, user_id):
     """Edits group info
@@ -220,7 +220,7 @@ def like_post(post_id, user_id):
     post_id : int
         ID of the post to like
 
-    post_id : int
+    user_id : int
         ID of the user liking the post
 
     Returns
@@ -230,9 +230,7 @@ def like_post(post_id, user_id):
 
     """
 
-    # TODO Keep track of if the user has already liked the post
-
-    status = models.like_post(post_id=post_id)
+    status = models.like_post(post_id=post_id, user_id=user_id)
     if status == -1:
         content = {
             "reason": "Post not found"
@@ -308,7 +306,6 @@ def post_comment(post_id, comment):
 
 # Function Status: Basic implementation, tested
 # TODO: Get path to avatar
-# TODO: Return whether the user has liked the post
 def load_post(post_id, user_id):
     """Loads post information
 
@@ -316,6 +313,9 @@ def load_post(post_id, user_id):
     ----------
     post_id : int
         ID of post you want to load
+
+    user_id : int
+        ID of user
 
     Returns
     -------
@@ -349,9 +349,13 @@ def load_post(post_id, user_id):
         }
         return gen_response(resp.ERR_SERVER, content)
 
-    # TODO: Check if the user id is in the liked array if yes has_liked = True
+    has_liked = models.has_liked(user_id=user_id, post_id=post_id)
 
-    has_liked = False
+    if has_liked == -1:
+        content = {
+            "reason": "Internal server error"
+        }
+        return gen_response(resp.ERR_SERVER, content)
 
     comments = models.get_comments(post_id=post_id)
     post_comments = []
@@ -443,7 +447,7 @@ def load_feed(filter):
             return gen_response(resp.ERR_SERVER, content)
         if filter_type != "Category" or filter_type != "User":
             for group in user_groups:
-                posts = load_group_posts(group.group_id)
+                posts = load_group_posts(group.group_id, user_id=user_id)
                 try:
                     user_feed += posts["posts"]
                 except KeyError:
@@ -519,7 +523,7 @@ def load_feed(filter):
 
         post_data = []
         for group in user_groups:
-            posts = get_category_posts(category=category, group_id=group.group_id)
+            posts = get_category_posts(category=category, group_id=group.group_id, user_id=user_id)
             if posts is False:
                 content = {
                     "reason": "Internal server error"
@@ -559,7 +563,7 @@ def load_feed(filter):
 
         post_data = []
         for group in user_groups:
-            posts = get_user_posts(user, group.group_id)
+            posts = get_user_posts(user, group.group_id, user_id=user_id)
             if posts is False:
                 content = {
                     "reason": "Internal server error"
@@ -582,7 +586,7 @@ def load_feed(filter):
             }
             return gen_response(resp.ERR_INVALID, content)
 
-        posts = load_group_posts(group_id=group_id)
+        posts = load_group_posts(group_id=group_id, user_id=user_id)
         try:
             post_data = posts["posts"]
         except KeyError:
@@ -633,26 +637,26 @@ def get_lat_long(location):
         return False
 
 
-def get_category_posts(category, group_id):
+def get_category_posts(category, group_id, user_id):
     posts = models.get_posts_from_category(category=category, group_id=group_id)
     if posts is False:
         return False
 
-    post_data = format_posts(posts)
+    post_data = format_posts(posts, user_id=user_id)
     return post_data
 
 
-def get_user_posts(user, group_id):
+def get_user_posts(user, group_id, user_id):
     posts = models.get_posts_from_user(user_id=user.user_id, group_id=group_id)
 
     if posts is False:
         return False
 
-    post_data = format_posts(posts)
+    post_data = format_posts(posts, user_id=user_id)
     return post_data
 
 
-def format_posts(posts):
+def format_posts(posts, user_id):
     post_data = []
     for post in posts:
 
@@ -668,6 +672,14 @@ def format_posts(posts):
                 "reason": "Post author not found"
             }
             return gen_response(resp.ERR_MISSING, content)
+
+        has_liked = models.has_liked(user_id=user_id, post_id=post.post_id)
+
+        if has_liked == -1:
+            content = {
+                "reason": "Internal server error"
+            }
+            return gen_response(resp.ERR_SERVER, content)
 
         comment_data = []
 
@@ -697,7 +709,9 @@ def format_posts(posts):
             "title": post.post_title,
             "postCategory": str(repr(models.catEnum(post.post_cat))).split("'")[1],
             "likes": post.post_likes,
+            "hasLiked": has_liked,
             "postComments": comment_data,
+            "postContent": post.post_desc,
             "postTime": post.post_time,
             "postLocation": post.post_loc
         })
@@ -705,7 +719,7 @@ def format_posts(posts):
     return post_data
 
 
-def load_group_posts(group_id):
+def load_group_posts(group_id, user_id):
     """Loads all posts sent by group members
 
     Parameters
@@ -769,6 +783,14 @@ def load_group_posts(group_id):
             }
             return content
 
+        has_liked = models.has_liked(user_id=user_id, post_id=post.post_id)
+
+        if has_liked == -1:
+            content = {
+                "reason": "Internal server error"
+            }
+            return gen_response(resp.ERR_SERVER, content)
+
         post_data.append({
             "postId": post.post_id,
             "groupId": post.group_id,
@@ -780,6 +802,8 @@ def load_group_posts(group_id):
             "title": post.post_title,
             "postCategory": str(repr(models.catEnum(post.post_cat))).split("'")[1],
             "likes": post.post_likes,
+            "hasLiked": has_liked,
+            "postContent": post.post_desc,
             "postComments": comment_data,
             "postTime": post.post_time,
             "postLocation": post.post_loc
