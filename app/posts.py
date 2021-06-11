@@ -30,8 +30,8 @@ def create_post(post):
 
     """
     try:
-        user_id = post["author"]["userId"]
-        group_id = post["groupId"]
+        user_id = int(post["author"]["userId"])
+        group_id = int(post["groupId"])
         post_title = post["title"]
         post_body = post["postContent"]
         post_location = post["location"]
@@ -80,7 +80,8 @@ def remove_post(post_id, user_id):
         JSON Response detailing the success or failure of post removal
 
     """
-
+    user_id = int(user_id)
+    post_id = int(post_id)
     post = models.load_post(post_id)
 
     if post is None:
@@ -150,8 +151,9 @@ def edit_post(post, user_id):
         JSON Response detailing the success or failure of post edit
 
     """
+    user_id = int(user_id)
     try:
-        post_id = post["postId"]
+        post_id = int(post["postId"])
         post_title = post["title"]
         post_content = post["postContent"]
     except KeyError:
@@ -228,7 +230,8 @@ def like_post(post_id, user_id):
         JSON Response detailing the success or failure of the like
 
     """
-
+    user_id = int(user_id)
+    post_id = int(post_id)
     status = models.like_post(post_id=post_id, user_id=user_id)
     if status == -1:
         content = {
@@ -265,7 +268,8 @@ def unlike_post(post_id, user_id):
         JSON Response detailing the success or failure of the like
 
     """
-
+    user_id = int(user_id)
+    post_id = int(post_id)
     status = models.unlike_post(post_id=post_id, user_id=user_id)
     if status == -1:
         content = {
@@ -303,8 +307,9 @@ def post_comment(post_id, comment):
     dict
         JSON Response detailing the success or failure of the comment post
     """
+    post_id = int(post_id)
     try:
-        user_id = comment["authorId"]
+        user_id = int(comment["authorId"])
         comment_content = comment["commentContent"]
     except KeyError:
         content = {
@@ -358,6 +363,9 @@ def load_post(post_id, user_id):
         JSON Response with information about the specified post
 
     """
+    post_id = int(post_id)
+    user_id = int(user_id)
+
     post = models.load_post(post_id=post_id)
 
     if post is None:
@@ -458,7 +466,7 @@ def load_feed(filter_params):
 
     try:
         filter_type = filter_params["type"]
-        user_id = filter_params["userId"]
+        user_id = int(filter_params["userId"])
     except KeyError:
         content = {
             "reason": "Invalid request"
