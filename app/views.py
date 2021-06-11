@@ -197,8 +197,8 @@ class Group(APIView):
     def post(self, request, *args, **kwargs):
         try:
             # This is an example of token checking
-            if not authentic_token(request):
-                return invalid_token
+#             if not authentic_token(request):
+#                 return invalid_token
             title = request.query_params["title"]
             description = request.query_params["description"]
             private = bool(request.query_params["private"])
