@@ -163,7 +163,7 @@ class Note(Model):
     note_id = Column(Integer, primary_key=True)
     user_id = Column(Integer, ForeignKey('user.user_id'))
     group_id = Column(Integer, ForeignKey('group.group_id')) # Needed for loading all group requests
-    subject_id = Column(Integer, ForeignKey('user.user_id')) # Needed for subjects
+    #subject_id = Column(Integer, ForeignKey('user.user_id')) # Needed for subjects
     note_type = Column(Enum(noteType))  # 0 = friends; 1 = groups Enum
     note_status = Column(Boolean, nullable=False)  # true = read, false = unread
     note_desc = Column(String)
@@ -185,7 +185,7 @@ class Friend(Model):
     __tablename__ = 'friend'
     rel_id = Column(Integer, primary_key=True)
     user_a = Column(Integer, ForeignKey('user.user_id'))
-    user_b = Column(Integer, ForeignKey('user.user_id'))
+    #user_b = Column(Integer, ForeignKey('user.user_id'))
     rel_type = Column(Boolean, nullable=False)  # False = Pending, True = Accepted
 
     def __init__(self, user_id, friend_id, rel_status):
@@ -908,3 +908,47 @@ def update_notification(note_id):
     except:
         return False
 
+# -------------------------------
+# Helper Function's for friends
+# -------------------------------
+
+def invite_friend(user_a_id, user_b_id):
+    f = session.query(Friend).filter(or_(and_(Friend.user_a == user_a_id, Friend.user_b == user_b_id), and_(Friend.user_b == user_a_id, Friend.user_a == user_b_id))).first()
+    if f == None:
+        f = Friend(user_a_id, user_b_id, False)
+        return True
+    else:
+        return False
+
+def accept_friend(user_b_id, user_a_id):
+    f = session.query(Friend).filter(or_(and_(Friend.user_a == user_a_id, Friend.user_b == user_b_id), and_(Friend.user_b == user_a_id, Friend.user_a == user_b_id))).first()
+    if f == None:
+        return False
+    else:
+        f1 = session.query(Friend).filter(and_(Friend.user_a == user_a_id, Friend.user_b == user_b_id)).first()
+        f2 = session.query(Friend).filter(and_(Friend.user_b == user_a_id, Friend.user_a == user_b_id)).first()
+
+        if f1 == None:
+            f2.rel_type = True
+            session.commit()
+
+        elif f2 == None:
+            f1.rel_type = True
+            session.commit()
+
+        return True
+
+# Returns None if no relation exists between user A and B, else returns the type, i.e False == Pending and True == Friends
+def get_rel_type(user_a_id, user_b_id):
+    f = session.query(Friend).filter(or_(and_(Friend.user_a == user_a_id, Friend.user_b == user_b_id), and_(Friend.user_b == user_a_id, Friend.user_a == user_b_id))).first()
+    if f == None:
+        return None
+    else:
+        f1 = session.query(Friend).filter(and_(Friend.user_a == user_a_id, Friend.user_b == user_b_id)).first()
+        f2 = session.query(Friend).filter(and_(Friend.user_b == user_a_id, Friend.user_a == user_b_id)).first()
+
+        if f1 == None:
+            return f2.rel_type
+
+        elif f2 == None:
+            return f1.rel_type
