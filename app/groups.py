@@ -415,7 +415,6 @@ def search_groups(search_term):
 
 
 # Function Status: Complete and tested
-# TODO: Avatar
 def load_group_posts(group_id, user_id):
     """Loads all posts sent by group members
 
@@ -459,7 +458,7 @@ def load_group_posts(group_id, user_id):
                 "author": {
                     "userId": author.user_id,
                     "username": author.username,
-                    "avatar": "/path/to/avatar"  # TODO
+                    "avatar": author.avatar
                 },
                 "commentContent": comment.comment_content,
                 "commentTime": comment.comment_time,
@@ -491,7 +490,7 @@ def load_group_posts(group_id, user_id):
             "author": {
                 "userId": post.user_id,
                 "username": user.username,
-                "avatar": "/path/to/avatar"  # TODO
+                "avatar": user.avatar
             },
             "title": post.post_title,
             "postCategory": str(repr(models.catEnum(post.post_cat))).split("'")[1],
