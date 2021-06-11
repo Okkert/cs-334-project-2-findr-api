@@ -275,6 +275,12 @@ def leave_group(user_id, group_id):
             "reason": "Internal server error"
         }
         return gen_response(resp.ERR_SERVER, content)
+    
+    if member is None:
+        content = {
+            "reason": "User is not a member of the group"
+        }
+        return gen_response(resp.ERR_MISSING, content)
 
     if len(admins) == 1 and member.membership == 2:
         content = {
