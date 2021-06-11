@@ -57,7 +57,7 @@ class User(Model):
     email = Column(String(127), nullable=False)
     password = Column(String(127), nullable=False)
     auth_token = Column(String(255))
-    # avatar = Column(String(127), nullable=False) # TODO
+    avatar = Column(String(127), nullable=False, default="https://storage.googleapis.com/findr-316018_bucket/default.PNG")
     bio = Column(String)
     # relationship with posts table
     posts = relationship('Post', backref="user")
