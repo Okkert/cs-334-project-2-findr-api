@@ -276,7 +276,7 @@ def leave_group(user_id, group_id):
         }
         return gen_response(resp.ERR_SERVER, content)
 
-    if len(admins) == 1 and member.admin is True:
+    if len(admins) == 1 and member.membership == 2:
         content = {
             "reason": "User is the only admin, please promote another admin before attempting to leave"
         }
