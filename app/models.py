@@ -549,8 +549,22 @@ def like_post(post_id, user_id):
         if p is None:
             return False
         p.post_likes += 1
-        l = Like(post_id=post_id, user_id=user_id)
-        session.add(l)
+        if session.query(Like).filter(Like.post_id == post_id).filter(Like.user_id == user_id).first() is None:
+            l = Like(post_id=post_id, user_id=user_id)
+            session.add(l)
+        session.commit()
+        return True
+    except:
+        return False
+
+
+def unlike_post(post_id, user_id):
+    try:
+        p = session.query(Post).filter(Post.post_id == post_id).first()
+        if p is None:
+            return False
+        p.post_likes -= 1
+        session.query(Like).filter(Like.post_id == post_id).filter(Like.user_id == user_id).delete()
         session.commit()
         return True
     except:

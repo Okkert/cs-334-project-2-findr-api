@@ -248,6 +248,43 @@ def like_post(post_id, user_id):
     return gen_response(resp.OK, content)
 
 
+def unlike_post(post_id, user_id):
+    """Likes a post
+
+    Parameters
+    ----------
+    post_id : int
+        ID of the post to unlike
+
+    user_id : int
+        ID of the user unliking the post
+
+    Returns
+    -------
+    dict
+        JSON Response detailing the success or failure of the like
+
+    """
+
+    status = models.unlike_post(post_id=post_id, user_id=user_id)
+    if status == -1:
+        content = {
+            "reason": "Post not found"
+        }
+        return gen_response(resp.ERR_MISSING, content)
+
+    if status is False:
+        content = {
+            "reason": "Internal server error"
+        }
+        return gen_response(resp.ERR_SERVER, content)
+
+    content = {
+        "reason": "Success"
+    }
+    return gen_response(resp.OK, content)
+
+
 # Function Status: Complete and tested
 def post_comment(post_id, comment):
     """Comment on a post

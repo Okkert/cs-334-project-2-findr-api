@@ -441,6 +441,16 @@ class LikePost(APIView):
             return invalid_response
         return posts.like_post(post_id=post_id, user_id=user_id)
 
+
+class UnlikePost(APIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            post_id = request.query_params["postId"]
+            user_id = request.query_params["userId"]
+        except KeyError:
+            return invalid_response
+        return posts.unlike_post(post_id=post_id, user_id=user_id)
+
 # ------------------- COMMENTS ------------------- #
 
 class Comment(APIView):

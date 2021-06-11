@@ -28,6 +28,7 @@ urlpatterns = [
     # ------------------- POSTS ------------------- #
     path('post/', views.Post.as_view(), name="post"),
     path('like_post/', views.LikePost.as_view(), name="like+post"),
+    path('unlike_post/', views.UnlikePost.as_view(), name="unlike_post"),
     # ------------------ COMMENT ------------------ #
     path('comment/', views.Comment.as_view(), name="comment"),
     # ------------------ NOTIFICATIONS ------------------ #
