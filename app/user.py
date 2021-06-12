@@ -72,8 +72,7 @@ def load_user(user_id):
             'id': user.user_id,
             'username': user.username,
             'email': user.email,
-            # TODO:
-            # 'avatar': user.avatar,
+            'avatar': user.avatar,
             'bio': user.bio
         }
 
