@@ -181,6 +181,17 @@ class LoadUserId(APIView):
         return user.get_user_id(username=username)
 
 
+class LoadUserGroups(APIView):
+    def get(self, request):
+        try:
+            user_id = request.query_params['userID']
+        except KeyError:
+            return invalid_response
+
+        return groups.get_users_groups(user_id=user_id)
+
+
+
 # ------------------- GROUPS ------------------- #
 
 class Group(APIView):

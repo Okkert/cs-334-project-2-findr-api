@@ -610,6 +610,14 @@ def get_comments(post_id):
 # Helper Function's for groups.py
 # -------------------------------
 
+def get_users_groups(user_id):
+    try:
+        g = session.query(Member).filter(Member.user_id == user_id).all()
+        return g
+    except:
+        return False
+
+
 def create_group(group_name, private, group_desc):
     try:
         g = Group(group_name, private, group_desc)

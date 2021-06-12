@@ -920,3 +920,41 @@ def decline_join_request(group_id, user_id):
     }
     return gen_response(resp.OK, content)
 
+
+def get_users_groups(user_id):
+
+    user_id = int(user_id)
+    g = models.get_users_groups(user_id=user_id)
+
+    if g is False:
+        content = {
+            "reason": "Internal server error"
+        }
+        return gen_response(resp.ERR_SERVER, content)
+
+    groups = []
+
+    if len(g) != 0:
+        for group in g:
+            group_id = group.group_id
+            membership = group.membership
+            group_name = models.search_group_by_id(group_id=group_id)
+            if group_name is False:
+                content = {
+                    "reason": "Internal server error"
+                }
+                return gen_response(resp.ERR_SERVER, content)
+
+            group_name = group_name.group_name
+
+            groups.append({
+                "groupName": group_name,
+                "groupId":  group_id,
+                "membership": membership
+            })
+
+    content = {
+        "groups": groups
+    }
+    return gen_response(resp.OK, content)
+
