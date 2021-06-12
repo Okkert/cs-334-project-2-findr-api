@@ -503,7 +503,7 @@ def load_feed(filter_params):
     # --------------------- TIME --------------------- #
     # Sorts all posts by most recent
     if filter_type == "Time":
-        post_data = sorted(user_feed, key=lambda i: i['postTime'])
+        post_data = sorted(user_feed, key=lambda i: i['postTime'], reverse=True)
 
         content = {
             "posts": post_data
