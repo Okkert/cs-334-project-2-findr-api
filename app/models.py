@@ -4,7 +4,7 @@
 # Imports
 #from django.db import models
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Boolean, Integer, String, ForeignKey, Enum
+from sqlalchemy import create_engine, Column, Boolean, Integer, String, ForeignKey, Enum, desc
 from sqlalchemy_utils import database_exists, create_database
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship
@@ -477,7 +477,7 @@ def create_post(user_id, group_id, post_title, post_body, post_location, post_ca
         p.post_likes = 0
         session.add(p)
         session.commit()
-        return True
+        return p.post_id
     except:
         return False
 
@@ -610,14 +610,6 @@ def get_comments(post_id):
 # Helper Function's for groups.py
 # -------------------------------
 
-def get_users_groups(user_id):
-    try:
-        g = session.query(Member).filter(Member.user_id == user_id).all()
-        return g
-    except:
-        return False
-
-
 def create_group(group_name, private, group_desc):
     try:
         g = Group(group_name, private, group_desc)
@@ -737,7 +729,7 @@ def load_group_members(group_id):
 
 def load_group_posts(group_id):
     try:
-        p = session.query(Post).filter(Post.group_id == group_id).all()
+        p = session.query(Post).filter(Post.group_id == group_id).order_by(desc(Post.post_time)).all()
         return p
     except:
         return False
@@ -857,6 +849,7 @@ def decline_join_request(group_id, user_id):
     except:
         return False
 
+
 def get_users_groups(user_id):
     try:
         m = session.query(Member).filter(Member.user_id == user_id).filter(Member.membership != 0).all()
@@ -974,3 +967,66 @@ def get_rel_type(user_a_id, user_b_id):
 
         elif f2 == None:
             return f1.rel_type
+
+
+# -------------------------------
+# Helper Function's for avatar
+# -------------------------------
+
+def update_user_avatar(user_id, avatar):
+    try:
+        u = session.query(User).filter(User.user_id == user_id).first()
+        u.avatar = avatar
+        session.commit()
+        return True
+    except:
+        return False
+
+
+def get_user_avatar(user_id):
+    u = session.query(User).filter(User.user_id == user_id).first()
+
+
+# -------------------------------
+# Helper Function's for Feed
+# -------------------------------
+
+def load_feed(user_id):
+    try:
+        posts = session.query(Post).filter(Post.group_id == Member.group_id).filter(Member.user_id == user_id).all()
+        return posts
+    except:
+        return False
+
+
+def load_feed_by_time(user_id):
+    try:
+        posts = session.query(Post).filter(Post.group_id == Member.group_id).filter(Member.user_id == user_id).order_by(desc(Post.post_time)).all()
+        return posts
+    except:
+        return False
+
+
+def load_feed_by_category(category, user_id):
+    try:
+        posts = session.query(Post).filter(Post.group_id == Member.group_id).filter(Post.post_cat == category).filter(Member.user_id == user_id).all()
+        return posts
+    except:
+        return False
+
+
+def load_feed_by_group(user_id, group_id):
+    try:
+        posts = session.query(Post).filter(Post.group_id == group_id).all()
+        return posts
+    except:
+        return False
+
+
+def load_feed_by_user(user_id, filter_user_id):
+    try:
+        posts = session.query(Post).filter(Post.group_id == Member.group_id).filter(Post.user_id == filter_user_id).filter(
+        Member.user_id == user_id).all()
+        return posts
+    except:
+        return False

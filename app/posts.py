@@ -48,16 +48,16 @@ def create_post(post):
         }
         return gen_response(resp.ERR_INVALID, content)
 
-    status = models.create_post(user_id, group_id, post_title, post_body, post_location, post_cat)
+    p = models.create_post(user_id, group_id, post_title, post_body, post_location, post_cat)
 
-    if status is False:
+    if p is False:
         content = {
             "reason": "Internal server error"
         }
         return gen_response(resp.ERR_SERVER, content)
 
     content = {
-        "reason": "Success"
+        "postId": p
     }
     return gen_response(resp.OK, content)
 
@@ -132,6 +132,7 @@ def remove_post(post_id, user_id):
 
 
 # Function Status: Complete and tested
+# TODO: Upgrade so that front-end doesn't have to give post title and post content as input
 def edit_post(post, user_id):
     """Edits group info
 
@@ -466,7 +467,7 @@ def load_feed(filter_params):
 
     try:
         filter_type = filter_params["type"]
-        user_id = int(filter_params["userId"])
+        user_id = filter_params["userId"]
     except KeyError:
         content = {
             "reason": "Invalid request"
@@ -474,9 +475,23 @@ def load_feed(filter_params):
         return gen_response(resp.ERR_INVALID, content)
 
     # --------------------- PREAMBLE --------------------- #
+
+    user_groups = models.get_users_groups(user_id=user_id)
+    if user_groups is None:
+        content = {
+            "reason": "User is not in any groups",
+            "posts": []
+        }
+        return gen_response(resp.OK, content)
+    elif user_groups is False:
+        content = {
+            "reason": "Internal server error"
+        }
+        return gen_response(resp.ERR_SERVER, content)
+
     user_feed = []
     user_groups = None
-    if filter_type == "Time" or filter_type == "Location" or filter_type == "Category" or filter_type == "User":
+    if filter_type == "Location":
         user_groups = models.get_users_groups(user_id=user_id)
         if user_groups is None:
             content = {
@@ -503,7 +518,8 @@ def load_feed(filter_params):
     # --------------------- TIME --------------------- #
     # Sorts all posts by most recent
     if filter_type == "Time":
-        post_data = sorted(user_feed, key=lambda i: i['postTime'], reverse=True)
+        post_data = models.load_feed_by_time(user_id=user_id)
+        post_data = format_posts(posts=post_data, user_id=user_id)
 
         content = {
             "posts": post_data
@@ -564,16 +580,12 @@ def load_feed(filter_params):
             }
             return gen_response(resp.ERR_INVALID, content)
 
-        post_data = []
-        for group in user_groups:
-            posts = get_category_posts(category=category, group_id=group.group_id, user_id=user_id)
-            if posts is False:
-                content = {
-                    "reason": "Internal server error"
-                }
-                return gen_response(resp.ERR_SERVER, content)
-            post_data += posts
+        post_data = models.load_feed_by_category(category=category, user_id=user_id)
+        if post_data is False:
+            content = {"reason": "Internal server error"}
+            return gen_response(resp.ERR_SERVER, content)
 
+        post_data = format_posts(posts=post_data, user_id=user_id)
         content = {
             "posts": post_data
         }
@@ -603,16 +615,12 @@ def load_feed(filter_params):
             }
             return gen_response(resp.ERR_MISSING, content)
 
-        post_data = []
-        for group in user_groups:
-            posts = get_user_posts(user, group.group_id, user_id=user_id)
-            if posts is False:
-                content = {
-                    "reason": "Internal server error"
-                }
-                return gen_response(resp.ERR_SERVER, content)
-            post_data += posts
+        post_data = models.load_feed_by_user(user_id=user_id, filter_user_id=user.user_id)
+        if post_data is False:
+            content = {"reason": "Internal server error"}
+            return gen_response(resp.ERR_SERVER, content)
 
+        post_data = format_posts(posts=post_data, user_id=user_id)
         content = {
             "posts": post_data
         }
@@ -628,15 +636,12 @@ def load_feed(filter_params):
             }
             return gen_response(resp.ERR_INVALID, content)
 
-        posts = load_group_posts(group_id=group_id, user_id=user_id)
-        try:
-            post_data = posts["posts"]
-        except KeyError:
-            content = {
-                "reason": posts["reason"]
-            }
-            return gen_response(posts["code"], content)
+        post_data = models.load_feed_by_group(group_id=group_id, user_id=user_id)
+        if post_data is False:
+            content = {"reason": "Internal server error"}
+            return gen_response(resp.ERR_SERVER, content)
 
+        post_data = format_posts(posts=post_data, user_id=user_id)
         content = {
             "posts": post_data
         }
@@ -677,25 +682,6 @@ def get_lat_long(location):
         return [lat, long]
     else:
         return False
-
-
-def get_category_posts(category, group_id, user_id):
-    posts = models.get_posts_from_category(category=category, group_id=group_id)
-    if posts is False:
-        return False
-
-    post_data = format_posts(posts, user_id=user_id)
-    return post_data
-
-
-def get_user_posts(user, group_id, user_id):
-    posts = models.get_posts_from_user(user_id=user.user_id, group_id=group_id)
-
-    if posts is False:
-        return False
-
-    post_data = format_posts(posts, user_id=user_id)
-    return post_data
 
 
 def format_posts(posts, user_id):
@@ -857,3 +843,30 @@ def load_group_posts(group_id, user_id):
         "posts": post_data
     }
     return content
+
+
+def update_user_avatar(user_id, avatar):
+    user = models.search_user_by_id(user_id=user_id)
+    if user is False:
+        content = {
+            "reason": "Internal server error"
+        }
+        return gen_response(resp.ERR_SERVER, content)
+    elif user == -1:
+        content = {
+            "reason": "User not found"
+        }
+        return gen_response(resp.ERR_MISSING, content)
+
+    status = models.update_user_avatar(user_id=user_id, avatar=avatar)
+    if status is False:
+        content = {
+            "reason": "Internal server error"
+        }
+        return gen_response(resp.ERR_SERVER, content)
+
+    content = {
+        "reason": "Success"
+    }
+    return gen_response(resp.OK, content)
+
