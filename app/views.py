@@ -184,7 +184,7 @@ class LoadUserId(APIView):
 class LoadUserGroups(APIView):
     def get(self, request):
         try:
-            user_id = request.query_params['userID']
+            user_id = request.query_params['userId']
         except KeyError:
             return invalid_response
 
