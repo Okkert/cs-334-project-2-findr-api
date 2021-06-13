@@ -733,6 +733,7 @@ def format_posts(posts, user_id):
 
             })
 
+        time_obj = datetime.datetime.strptime(post.post_time, '%m/%d/%Y %H:%M:%S %p')
         post_data.append({
             "postId": post.post_id,
             "groupId": post.group_id,
@@ -747,7 +748,7 @@ def format_posts(posts, user_id):
             "hasLiked": has_liked,
             "postComments": comment_data,
             "postContent": post.post_desc,
-            "postTime": datetime.datetime.strftime(post.post_time, '%-d %b %Y, %I%p'),
+            "postTime": datetime.datetime.strftime(time_obj, '%-d %b %Y, %I%p'),
             "postLocation": post.post_loc
         })
 
