@@ -439,6 +439,7 @@ def load_post(post_id, user_id):
                 "commentTime": comment.comment_time,
             })
 
+    time_obj = datetime.datetime.strptime(post.post_time, '%Y/%m/%d %H:%M:%S.%f')
     content = {
         "groupId": post.group_id,
         "postId": post_id,
@@ -452,7 +453,7 @@ def load_post(post_id, user_id):
         "likes": post.post_likes,
         "hasLiked": has_liked,
         "postLocation": post.post_loc,
-        "postTime": datetime.datetime.strftime(post.post_time, '%-d %b %Y, %I%p'),
+        "postTime": datetime.datetime.strftime(time_obj, '%-d %b %Y, %I%p'),
         "postCategory": str(repr(models.catEnum(post.post_cat))).split("'")[1],
         "postComments": post_comments
     }
@@ -733,7 +734,7 @@ def format_posts(posts, user_id):
 
             })
 
-        time_obj = datetime.datetime.strptime(post.post_time, '%m/%d/%Y %H:%M:%S %p')
+        time_obj = datetime.datetime.strptime(post.post_time, '%Y/%m/%d %H:%M:%S.%f')
         post_data.append({
             "postId": post.post_id,
             "groupId": post.group_id,
