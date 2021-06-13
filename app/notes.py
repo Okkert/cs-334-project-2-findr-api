@@ -42,7 +42,7 @@ def load_notifications(user_id):
 
 
 # Function Status: Incomplete implementation, not tested
-def create_notification(note):
+def create_note(note):
     """Creates an unread notification
 
     Parameters
@@ -76,7 +76,7 @@ def create_notification(note):
     if not models.group_exists(group_id):
         return gen_missing("group")
 
-    valid = models.create_notification(user_id=user_id, subject_id=subject_id, group_id=group_id, note_type=note_type, status=status,  desc=desc)
+    valid = models.create_note(user_id=user_id, subject_id=subject_id, group_id=group_id, note_type=note_type, status=status,  desc=desc)
     if valid is False:
         content = {
             "reason": "Internal server error"
@@ -119,16 +119,16 @@ def update_notification(note_id):
         JSON Response detailing the success or failure of reading the notification
 
     """
-    #try:
-    if not models.note_exists(note_id):
-        return gen_missing("notification")
+    try:
+        if not models.note_exists(note_id):
+            return gen_missing("notification")
 
-    success = models.update_notification(note_id)
-    if success is False:
-        return resp.RESP_SERVER
-    return gen_response(resp.OK)
-    #except:
-    #    return gen_response(resp.ERR_SERVER)
+        success = models.update_notification(note_id)
+        if success is False:
+            return resp.RESP_SERVER
+        return gen_response(resp.OK)
+    except:
+        return gen_response(resp.ERR_SERVER)
 
 
 def load_notification(note_id):
@@ -170,6 +170,27 @@ def load_notification(note_id):
 
 
 def construct_note(user_id, subject_id, group_id, note_type, desc):
+    """Constructs a note dictionary
+
+    Parameters
+    ----------
+    user_id : int
+        Unique note identifier
+    subject_id : int
+        Identifier of the subject of the notification
+    group_id : int
+        Unique group identifier. Friendships go to group 69.
+    note_type : str
+        group/friend/dev
+    desc : str
+        Description of notification
+
+    Returns
+    -------
+    dict
+        JSON Response detailing the success or failure of notification creation
+
+    """
     note = {
         'userId': user_id,
         'subjectId': subject_id,
@@ -181,23 +202,131 @@ def construct_note(user_id, subject_id, group_id, note_type, desc):
 
 
 def create_welcome_note(user_id):
+    """Creates a welcome note
+
+    Parameters
+    ----------
+    user_id : int
+        Unique user identifier
+
+    Returns
+    -------
+    dict
+        JSON Response detailing the success or failure of notification creation
+
+    """
     try:
-        note = construct_note(user_id, user_id, 42, 'dev', "Welcome to Findr!")
+        note = construct_note(user_id, user_id, 69, 'dev', "Welcome to Findr!")
     except:
         print("create_welcome_note failed")
         return
 
 
 def create_friend_request_note(user_id, friend_id):
+    """Creates a welcome note
+
+    Parameters
+    ----------
+    user_id : int
+        Unique user identifier of the requestee
+    friend_id : int
+        Unique user identifier of the requested
+
+    Returns
+    -------
+    dict
+        JSON Response detailing the success or failure of notification creation
+
+    """
     try:
-        note = construct_note(user_id, friend_id, 69, 'friend', "Someone would like to connect!")
-        create_notification(note)
+        user_a = models.search_user_by_id(user_id)
+        msg = user_a.username + " would like to connect!"
+        note = construct_note(friend_id, user_id, 69, 'friend', msg)
+        create_note(note)
     except:
         print("create_friend_request_note failed")
         return
 
 
-def create_group_request_notification(user_id, group_id):
+def create_friend_added_note(user_id, friend_id):
+    """Notify users that their friendship is indeed magic
+
+    Parameters
+    ----------
+    user_id : int
+        Unique user identifier of the acceptor
+    friend_id : int
+        Unique user identifier of the accepted
+
+    Returns
+    -------
+    dict
+        JSON Response detailing the success or failure of notification creation
+
+    """
+    try:
+        user_a = models.search_user_by_id(user_id)
+        user_b = models.search_user_by_id(friend_id)
+
+        msg_a = "You and " + user_b.username + " have connected!"
+        msg_b = "You and " + user_a.username + " have connected!"
+
+        note = construct_note(user_id, friend_id, 69, 'friend', msg_a)
+        create_note(note)
+        note = construct_note(friend_id, user_id, 69, 'friend', msg_b)
+        create_note(note)
+    except:
+        return resp.RESP_SERVER
+
+
+def create_group_join_note(user_id, group_id):
+    """Notifies group members of their new pal
+
+    Parameters
+    ----------
+    user_id : int
+        Unique user identifier
+    group_id : int
+        Unique group identifier
+    Returns
+    -------
+    dict
+        JSON Response detailing the success or failure of notification creation
+
+    """
+    try:
+        u = models.search_user_by_id(user_id)
+        g = models.search_group_by_id(group_id)
+
+        if u is None:
+            return gen_missing("User")
+
+        # TODO: Get all members
+        members = []
+        msg = u.username + " joined " + g.group_name
+        for member in members:
+            note = construct_note(member.user_id, user_id, group_id, 'group', msg)
+    except:
+        return resp.RESP_SERVER
+
+
+
+def create_group_request_note(user_id, group_id):
+    """Notifies admins of a group join request
+
+    Parameters
+    ----------
+    user_id : int
+        Unique user identifier
+    group_id : int
+        Unique group identifier
+
+    Returns
+    -------
+    dict
+        JSON Response detailing the success or failure of notification creation
+
+    """
     try:
         group_name = group_id
         note = {
@@ -206,13 +335,45 @@ def create_group_request_notification(user_id, group_id):
             'note_type': "group",
             'desc': "A user has requested to join " + group_name
         }
-        create_notification(note)
+        create_note(note)
     except:
         print("resolve_request_notification failed")
         return
 
 
-def create_group_request_resolved_notification(user_id, group_id, was_accepted):
+def create_group_role_update(user_id, group_id, promoted):
+    try:
+        g = models.search_group_by_id(group_id)
+        msg = "You've been "
+        if promoted:
+            msg += "promoted on"
+        else:
+            msg += "demoted on "
+        msg += g.group_name
+        note = construct_note(user_id, user_id, group_id, 'group', msg)
+        create_note(note)
+    except:
+        print("create_group_role_update failed")
+
+
+def create_group_request_resolved_note(user_id, group_id, was_accepted):
+    """Notify user of their group request resolution
+
+    Parameters
+    ----------
+    user_id : int
+        Unique user identifier
+    group_id : int
+        Unique group identifier
+    was_accepted : bool
+        Indicates whether the request was accepted
+
+    Returns
+    -------
+    dict
+        JSON Response detailing the success or failure of notification creation
+
+    """
     try:
         group_name = group_id
 
@@ -225,21 +386,39 @@ def create_group_request_resolved_notification(user_id, group_id, was_accepted):
 
         note = {
             'userId': user_id,
+            'subjectId': user_id,
             'groupId': group_id,
             'note_type': "group",
             'desc': desc
         }
-        create_notification(note)
+        create_note(note)
     except:
         print("create_request_resolved_notification failed")
         return
 
 
-def resolve_request_notification(user_id, group_id, was_accepted):
+def update_group_request_notification(user_id, group_id, was_accepted):
+    """Update an active group join request
+
+    Parameters
+    ----------
+    user_id : int
+        Unique user identifier
+    group_id : int
+        Unique group identifier
+    was_accepted : bool
+        Indicates whether the request was accepted or declined
+
+    Returns
+    -------
+    dict
+        JSON Response detailing the success or failure of notification creation
+
+    """
     try:
         # TODO: Find note with user_id and group_id
         # TODO: Delete note
-        create_group_request_notification(user_id, group_id, was_accepted)
+        print("Implement update_group_request_notification pls")
     except:
         print("resolve_request_notification failed")
         return

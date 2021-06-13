@@ -117,10 +117,20 @@ class UpdateUser(APIView):
 class DeleteUser(APIView):
     def delete(self, request, *args, **kwargs):
         try:
-            user_id = request.query_params['userId']
+            user_id = request.query_params['UserId']
         except KeyError:
             return invalid_response
         return user.delete_user(user_id)
+
+
+class UpdateAvatar(APIView):
+    def put(self, request, *args, **kwargs):
+        try:
+            user_id = request.query_params['userId']
+            url = request.query_params['url']
+        except KeyError:
+            return invalid_response
+        return user.update_avatar(user_id, url)
 
 
 class LoadFeed(APIView):
@@ -182,7 +192,7 @@ class LoadFeed(APIView):
 
 
 class LoadUserId(APIView):
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         try:
             username = request.query_params['username']
         except KeyError:
@@ -192,7 +202,7 @@ class LoadUserId(APIView):
 
 
 class LoadUserGroups(APIView):
-    def get(self, request):
+    def get(self, request, *args, **kwargs):
         try:
             user_id = request.query_params['userId']
         except KeyError:
@@ -201,17 +211,28 @@ class LoadUserGroups(APIView):
         return groups.get_users_groups(user_id=user_id)
 
 
-class UpdateAvatar(APIView):
-    def put(self, request, *args, **kwargs):
+class AddFriend(APIView):
+    def post(self, request, *args, **kwargs):
         try:
-            user_id = request.query_params['userId']
-            url = request.query_params['url']
+            user_a = request.query_params['userId']
+            user_b = request.query_params['friendId']
         except KeyError:
             return invalid_response
-        return user.update_avatar(user_id, url)
+        return user.add_friend(user_a, user_b)
+
+
+class InviteFriend(APIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            user_a = request.query_params['userId']
+            user_b = request.query_params['friendId']
+        except KeyError:
+            return invalid_response
+        return user.invite_friend(user_a, user_b)
 
 
 # ------------------- GROUPS ------------------- #
+
 class Group(APIView):
     # Load group
     def get(self, request, *args, **kwargs):

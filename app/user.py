@@ -224,9 +224,9 @@ def search_user(search_term, user_id):
             users.append({
                 'id': user.user_id,
                 'username': user.username,
-                'bio': user.bio,
                 'avatar': user.avatar,
-                'rel': rel
+                'rel': rel,
+                'bio': user.bio
             })
 
         return gen_response(resp.OK, {'content': users})
@@ -310,8 +310,6 @@ def invite_friend(id_a, id_b):
         return gen_response(resp.ERR_SERVER, {"reason": "Oops! Something went wrong D:"})
 
 
-
-
 def update_avatar(user_id, url):
 
     status = models.update_user_avatar(user_id=user_id, avatar=url)
@@ -325,4 +323,3 @@ def update_avatar(user_id, url):
         "reason": "Success"
     }
     return gen_response(resp.OK, content)
-

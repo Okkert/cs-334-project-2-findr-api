@@ -1,4 +1,4 @@
-from . import models
+from . import models, notes
 from .utils.toolbox import gen_response, debug_out, tattle, behaved
 from .utils import response_constants as resp
 
@@ -252,6 +252,7 @@ def join_group(user_id, group_id):
         return gen_response(resp.ERR_SERVER, content)
 
     status = models.join_group(group_id=group_id, user_id=user.user_id, membership=1)
+    notes.create_group_join_note(user_id, group_id)
 
     if not status:
         content = {
@@ -385,21 +386,17 @@ def load_group(group_id=None, group_name=None):
 def search_groups(search_term, user_id):
     """Search for all groups with a title containing
     the search term
-
     Parameters
     ----------
     search_term : str
         Name of group that the user would like to leave
-
     user_id : int
         ID of the user making the search
-
     Returns
     -------
     dict
         JSON Response of all groups found as well as whether the user is
         a member of the group
-
     """
     groups = []
     groups_name = models.search_groups_by_name(search_term)
@@ -421,15 +418,13 @@ def search_groups(search_term, user_id):
                 return gen_response(resp.ERR_SERVER, content)
 
             if membership is None:
-                mem = -1
-            else:
-                mem = membership.membership
+                membership = -1
 
             groups.append({
                 "id": group.group_id,
                 "title": group.group_name,
                 "desc": group.group_desc,
-                "membership": mem,
+                "membership": membership.membership,
                 "private": group.private
             })
 
@@ -443,15 +438,13 @@ def search_groups(search_term, user_id):
                 return gen_response(resp.ERR_SERVER, content)
 
             if membership is None:
-                mem = -1
-            else:
-                mem = membership.membership
+                membership = -1
 
             groups.append({
                 "id": group.group_id,
                 "title": group.group_name,
                 "desc": group.group_desc,
-                "membership": mem,
+                "membership": membership.membership,
                 "private": group.private
             })
 
@@ -646,6 +639,8 @@ def promote_member(group_id, user_id, promote_user_id):
         return gen_response(resp.ERR_SERVER, content)
 
     status = models.promote_user(user_id=promote_user_id, group_id=group_id)
+    notes.create_group_role_update(user_id, group_id, True)
+
     if status is False:
         content = {
             "reason": "Internal server error"
@@ -709,6 +704,8 @@ def demote_member(group_id, user_id, demote_user_id):
         return gen_response(resp.ERR_SERVER, content)
 
     status = models.demote_user(user_id=demote_user_id, group_id=group_id)
+    notes.create_group_role_update(user_id, group_id, False)
+
     if status is False:
         content = {
             "reason": "Internal server error"
@@ -837,6 +834,8 @@ def request_group_invite(group_id, user_id):
         return gen_response(resp.OK, content)
 
     status = models.request_group_invite(group_id=group_id, user_id=user_id)
+    # TODO: Test
+    notes.create_group_request_note(user_id, group_id)
     if status is False:
         content = {
             "reason": "Internal server error"
@@ -884,6 +883,9 @@ def accept_join_request(group_id, user_id):
         return gen_response(resp.ERR_MISSING, content)
 
     status = models.accept_join_request(group_id=group_id, user_id=user_id)
+
+    notes.create_group_request_resolved_note(user_id, group_id, True)
+
     if status is False:
         content = {
             "reason": "Internal server error"
@@ -935,6 +937,8 @@ def decline_join_request(group_id, user_id):
         return gen_response(resp.ERR_MISSING, content)
 
     status = models.decline_join_request(group_id=group_id, user_id=user_id)
+    notes.create_group_request_resolved_note(user_id, group_id, False)
+
     if status is False:
         content = {
             "reason": "Internal server error"

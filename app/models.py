@@ -57,18 +57,22 @@ class User(Model):
     email = Column(String(127), nullable=False)
     password = Column(String(127), nullable=False)
     auth_token = Column(String(255))
-    avatar = Column(String(127), nullable=False, default="https://storage.googleapis.com/findr-316018_bucket/default.PNG")
+    avatar = Column(String(255), nullable=False, default="https://storage.googleapis.com/findr-316018_bucket/default.PNG")
     bio = Column(String)
     # relationship with posts table
     posts = relationship('Post', backref="user")
     # relationship with comments table
     comment = relationship('Comment', backref="user")
+    #friends = relationship('Friend', primaryjoin='User.user_id==Friend.user_a_id')
     # relationship with friends table
-    friends = relationship('Friend', backref="user")
+    #friend = relationship('Friend', foreign_keys='Friend.rel_id', backref='friend_rel', lazy='dynamic')
+    #friend = relationship('Friend', foreign_keys='Friend.rel_id', backref='friend_rel', lazy='dynamic')
+    #friend_2 = relationship('Friend', foreign_keys='Friend.user_a_id', backref='friend_b_user_id', lazy='dynamic')
     # relationship with member table
     member = relationship('Member', backref="user")
     # relationship with note table
     note = relationship('Note', backref="user")
+    #sub_id = relationship('Note', backref="subject")
 
     def __init__(self, username, email, password):
         self.username = username
@@ -184,17 +188,17 @@ class Note(Model):
 class Friend(Model):
     __tablename__ = 'friend'
     rel_id = Column(Integer, primary_key=True)
-    user_a = Column(Integer, ForeignKey('user.user_id'))
-    #user_b = Column(Integer, ForeignKey('user.user_id'))
-    rel_type = Column(Boolean, nullable=False)  # False = Pending, True = Accepted
+    pal_id = Column(Integer, ForeignKey("user.user_id"))
+    friend_id = Column(Integer, ForeignKey("user.user_id"))
+    rel_type = Column(Integer, nullable=False)
 
-    def __init__(self, user_id, friend_id, rel_status):
-        self.user_id = user_id
+    pal = relationship("User", foreign_keys=[pal_id])
+    friend = relationship("User", foreign_keys=[friend_id])
+
+    def __init__(self, pal_id, friend_id, rel_type):
+        self.pal_id = pal_id
         self.friend_id = friend_id
-        self.rel_status = rel_status
-
-    def __repr__(self):
-        return f"Friend( '{self.user_id}', '{self.friend_id}', '{self.rel_status}')"
+        self.rel_type = rel_type
 
 
 class Like(Model):
@@ -928,39 +932,39 @@ def update_notification(note_id):
 # -------------------------------
 
 def invite_friend(user_a_id, user_b_id):
-    f = session.query(Friend).filter(or_(and_(Friend.user_a == user_a_id, Friend.user_b == user_b_id), and_(Friend.user_b == user_a_id, Friend.user_a == user_b_id))).first()
+    f = session.query(Friend).filter(or_(and_(Friend.pal_id == user_a_id, Friend.friend_id == user_b_id), and_(Friend.friend_id == user_a_id, Friend.pal_id == user_b_id))).first()
     if f == None:
-        f = Friend(user_a_id, user_b_id, False)
+        f = Friend(user_a_id, user_b_id, 0)
         return True
     else:
         return False
 
 def accept_friend(user_b_id, user_a_id):
-    f = session.query(Friend).filter(or_(and_(Friend.user_a == user_a_id, Friend.user_b == user_b_id), and_(Friend.user_b == user_a_id, Friend.user_a == user_b_id))).first()
+    f = session.query(Friend).filter(or_(and_(Friend.pal_id == user_a_id, Friend.friend_id == user_b_id), and_(Friend.friend_id == user_a_id, Friend.pal_id == user_b_id))).first()
     if f == None:
         return False
     else:
-        f1 = session.query(Friend).filter(and_(Friend.user_a == user_a_id, Friend.user_b == user_b_id)).first()
-        f2 = session.query(Friend).filter(and_(Friend.user_b == user_a_id, Friend.user_a == user_b_id)).first()
+        f1 = session.query(Friend).filter(and_(Friend.pal_id == user_a_id, Friend.friend_id == user_b_id)).first()
+        f2 = session.query(Friend).filter(and_(Friend.friend_id == user_a_id, Friend.pal_id == user_b_id)).first()
 
         if f1 == None:
-            f2.rel_type = True
+            f2.rel_type = 1
             session.commit()
 
         elif f2 == None:
-            f1.rel_type = True
+            f1.rel_type = 1
             session.commit()
 
         return True
 
 # Returns None if no relation exists between user A and B, else returns the type, i.e False == Pending and True == Friends
 def get_rel_type(user_a_id, user_b_id):
-    f = session.query(Friend).filter(or_(and_(Friend.user_a == user_a_id, Friend.user_b == user_b_id), and_(Friend.user_b == user_a_id, Friend.user_a == user_b_id))).first()
+    f = session.query(Friend).filter(or_(and_(Friend.pal_id == user_a_id, Friend.friend_id == user_b_id), and_(Friend.friend_id == user_a_id, Friend.pal_id == user_b_id))).first()
     if f == None:
         return None
     else:
-        f1 = session.query(Friend).filter(and_(Friend.user_a == user_a_id, Friend.user_b == user_b_id)).first()
-        f2 = session.query(Friend).filter(and_(Friend.user_b == user_a_id, Friend.user_a == user_b_id)).first()
+        f1 = session.query(Friend).filter(and_(Friend.pal_id == user_a_id, Friend.friend_id == user_b_id)).first()
+        f2 = session.query(Friend).filter(and_(Friend.friend_id == user_a_id, Friend.pal_id == user_b_id)).first()
 
         if f1 == None:
             return f2.rel_type
@@ -1026,3 +1030,11 @@ def load_feed_by_user(user_id, filter_user_id):
         return posts
     except:
         return False
+
+#print(invite_friend(1,2))
+#print(accept_friend(2,1))
+#print(get_rel_type(1,2))
+#f = Friend(1, 2, 0)
+#session.add(f)
+#session.commit()
+#invite_friend(1,2)
