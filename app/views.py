@@ -293,10 +293,11 @@ class SearchGroups(APIView):
     def get(self, request, *args, **kwargs):
         try:
             search_term = request.query_params["search"]
+            user_id = request.query_params["userId"]
         except KeyError:
             return invalid_response
 
-        return groups.search_groups(search_term)
+        return groups.search_groups(search_term, user_id)
 
 
 class LoadGroupPosts(APIView):
