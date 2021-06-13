@@ -201,9 +201,17 @@ class LoadUserGroups(APIView):
         return groups.get_users_groups(user_id=user_id)
 
 
+class UpdateAvatar(APIView):
+    def put(self, request, *args, **kwargs):
+        try:
+            user_id = request.query_params['userId']
+            url = request.query_params['url']
+        except KeyError:
+            return invalid_response
+        return user.update_avatar(user_id, url)
+
 
 # ------------------- GROUPS ------------------- #
-
 class Group(APIView):
     # Load group
     def get(self, request, *args, **kwargs):

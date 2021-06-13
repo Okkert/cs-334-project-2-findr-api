@@ -311,3 +311,18 @@ def invite_friend(id_a, id_b):
 
 
 
+
+def update_avatar(user_id, url):
+
+    status = models.update_user_avatar(user_id=user_id, avatar=url)
+    if status is False:
+        content = {
+            "reason": "Internal server error"
+        }
+        return gen_response(resp.ERR_SERVER, content)
+
+    content = {
+        "reason": "Success"
+    }
+    return gen_response(resp.OK, content)
+
