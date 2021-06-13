@@ -224,6 +224,7 @@ def search_user(search_term, user_id):
             users.append({
                 'id': user.user_id,
                 'username': user.username,
+                'bio': user.bio,
                 'avatar': user.avatar,
                 'rel': rel
             })
