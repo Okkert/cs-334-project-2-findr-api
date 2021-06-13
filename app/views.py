@@ -117,7 +117,7 @@ class UpdateUser(APIView):
 class DeleteUser(APIView):
     def delete(self, request, *args, **kwargs):
         try:
-            user_id = request.query_params['UserId']
+            user_id = request.query_params['userId']
         except KeyError:
             return invalid_response
         return user.delete_user(user_id)

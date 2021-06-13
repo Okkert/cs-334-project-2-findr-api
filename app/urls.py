@@ -15,6 +15,7 @@ urlpatterns = [
     path('load_userId/', views.LoadUserId.as_view(), name="load_user_id"),
     path('load_user_groups/', views.LoadUserGroups.as_view(), name="load_user_groups"),
     path('update_avatar/', views.UpdateAvatar.as_view(), name="update_avatar"),
+    path('delete_user/', views.DeleteUser.as_view(), name="delete_user"),
     # ------------------- GROUPS ------------------- #
     path('group/', views.Group.as_view(), name="group"),
     path('leave_group/', views.LeaveGroup.as_view(), name="leave_group"),
