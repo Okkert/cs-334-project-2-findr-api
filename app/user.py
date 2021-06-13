@@ -132,7 +132,7 @@ def update_user_details(user_info):
             password = user_info['password']
             if valid_password(password):
                 hash_pass = sha256_crypt.encrypt(password)
-                user.password = password
+                user.password = hash_pass
             else:
                 return gen_response(resp.ERR_INVALID, {"reason": "Invalid password"})
 
