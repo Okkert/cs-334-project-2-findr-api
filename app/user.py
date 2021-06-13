@@ -213,10 +213,15 @@ def search_user(search_term, user_id):
     """
     try:
         users_found = models.search_users_by_name(search_term)
+        print(users_found)
         users = []
 
         for user in users_found:
-            rel = models.get_rel_type(user_id, user.user_id)
+            # FIXME:
+            #rel = models.get_rel_type(user_id, user.user_id)
+            rel = -1;
+            #if rel is None:
+            #   rel = -1
             users.append({
                 'id': user.user_id,
                 'username': user.username,
@@ -227,7 +232,7 @@ def search_user(search_term, user_id):
         return gen_response(resp.OK, {'content': users})
     except:
         print("search_user incomplete")
-        return resp.RESP_INVALID
+        return resp.RESP_SERVER
 
 
 def add_friend(id_a, id_b):
