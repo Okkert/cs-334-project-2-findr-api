@@ -14,6 +14,7 @@ import re
 from .models import User, Post, Comment, Group, Member, Note, Friend
 from .auth import username_exists, valid_email, valid_password
 from . import models
+from . import notes
 
 # Relationship Types
 # FIXME: We can enum this?
@@ -72,7 +73,8 @@ def load_user(user_id):
             'id': user.user_id,
             'username': user.username,
             'email': user.email,
-            'avatar': user.avatar,
+            # TODO:
+            # 'avatar': user.avatar,
             'bio': user.bio
         }
 
@@ -184,7 +186,7 @@ def get_rel_type(id_a, id_b):
         """
     try:
         # TODO: Query
-        rel_type = models.get_relationship(id_a, id_b)
+        rel_type = models.get_rel_type(id_a, id_b)
 
         if rel_type is None:
             return gen_response(resp.ERR_MISSING, {"reason": "Failed to find both users"})
@@ -195,41 +197,37 @@ def get_rel_type(id_a, id_b):
         return gen_response(resp.ERR_SERVER, {"reason": "Oops! Something went wrong on our end"})
 
 
-def search_user(search_term):
+def search_user(search_term, user_id):
     """Search for users based on search term
 
     Parameters
     ----------
     search_term : str
         Term to search for in usernames
-
+    user_id : str
+        Identifier of user who is searching (used to check relationships)
     Returns
     -------
     dict
         JSON Response detailing the success or failure of operation
     """
+    try:
+        users_found = models.search_users_by_name(search_term)
+        users = []
 
-    # We have to decide whether we want to search similar usernames or usernames that start with the search term
-    # OR just users with the exact search term as their username
+        for user in users_found:
+            rel = models.get_rel_type(user_id, user.user_id)
+            users.append({
+                'id': user.user_id,
+                'username': user.username,
+                'avatar': user.avatar,
+                'rel': rel
+            })
 
-    # TODO: Search database
-
-    # Query database with chosen search method (exact match / close match)
-    # Retrieve usernames from query result and add to list
-
-    # TODO: Retrieve relationship status
-
-    # For each user found, retrieve the relationship status of the found user to the current
-    # Relationship status options: You, Friend, Pending, None
-
-    # TODO: Prepare output
-
-    # Collect each search result user's username and relationship status into a dictionary
-
-    # TODO: Return dictionary
-
-    print("search_user incomplete")
-    return None
+        return gen_response(resp.OK, {'content': users})
+    except:
+        print("search_user incomplete")
+        return resp.RESP_INVALID
 
 
 def add_friend(id_a, id_b):
@@ -293,8 +291,12 @@ def invite_friend(id_a, id_b):
 
         if rel_type is None:
             # TODO: Create query - set relationship to pending
-            models.set_rel_type(id_a, id_b, rel_type)
-            # TODO: Generate notification
+            models.invite_friend(id_a, id_b)
+
+            try:
+                notes.create_friend_request_note(id_a, id_b);
+            except:
+                print("Failed to create notification: ", id_a, " invited ", id_b)
             return gen_response(resp.OK, None)
         else:
             return gen_response(resp.ERR_INVALID, {"reason": "Cannot invite this user"})
@@ -303,20 +305,4 @@ def invite_friend(id_a, id_b):
         return gen_response(resp.ERR_SERVER, {"reason": "Oops! Something went wrong D:"})
 
 
-def load_feed(user_id):
-    """Load's a user's main feed
-
-        Parameters
-        ----------
-        id_a : int
-            User id of person inviting another
-
-        id_b : int
-            User id of person being invited
-
-        Returns
-        -------
-        dict
-            JSON Response detailing the success or failure of operation
-        """
 

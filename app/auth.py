@@ -12,7 +12,7 @@ from passlib.handlers.sha2_crypt import sha256_crypt
 from .utils.toolbox import gen_response, debug_out, tattle, behaved
 from .utils import response_constants as resp
 from rest_framework import authentication
-from . import models
+from . import models, notes
 import jwt
 import datetime
 
@@ -295,6 +295,9 @@ def register(username, email, password):
         if behaved(board):
             models.insert_user(username, email, hash_pass)
             response = gen_response(resp.OK, {})
+            # TODO: Test
+            u = models.search_username(username)
+            notes.create_welcome_note(u.user_id)
         else:
             response = gen_response(resp.ERR_INVALID, {"reason": board})
         return response

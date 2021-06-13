@@ -62,6 +62,7 @@ def create_notification(note):
         print(note)
         user_id = note["userId"]
         group_id = note["groupId"]
+        subject_id = note["subjectId"]
         status = False
         desc = note["desc"]
         note_type = note["note_type"]
@@ -75,7 +76,7 @@ def create_notification(note):
     if not models.group_exists(group_id):
         return gen_missing("group")
 
-    valid = models.create_notification(user_id=user_id, group_id=group_id, note_type=note_type, status=status,  desc=desc)
+    valid = models.create_notification(user_id=user_id, subject_id=subject_id, group_id=group_id, note_type=note_type, status=status,  desc=desc)
     if valid is False:
         content = {
             "reason": "Internal server error"
@@ -166,6 +167,82 @@ def load_notification(note_id):
         return gen_response(resp.OK, content)
     except:
         return resp.RESP_SERVER
+
+
+def construct_note(user_id, subject_id, group_id, note_type, desc):
+    note = {
+        'userId': user_id,
+        'subjectId': subject_id,
+        'groupId': group_id,
+        'note_type': note_type,
+        'desc': desc
+    }
+    return note
+
+
+def create_welcome_note(user_id):
+    try:
+        note = construct_note(user_id, user_id, 42, 'dev', "Welcome to Findr!")
+    except:
+        print("create_welcome_note failed")
+        return
+
+
+def create_friend_request_note(user_id, friend_id):
+    try:
+        note = construct_note(user_id, friend_id, 69, 'friend', "Someone would like to connect!")
+        create_notification(note)
+    except:
+        print("create_friend_request_note failed")
+        return
+
+
+def create_group_request_notification(user_id, group_id):
+    try:
+        group_name = group_id
+        note = {
+            'userId': user_id,
+            'groupId': group_id,
+            'note_type': "group",
+            'desc': "A user has requested to join " + group_name
+        }
+        create_notification(note)
+    except:
+        print("resolve_request_notification failed")
+        return
+
+
+def create_group_request_resolved_notification(user_id, group_id, was_accepted):
+    try:
+        group_name = group_id
+
+        desc = "Your request to join " + group_name
+
+        if was_accepted:
+            desc += " was accepted!"
+        else:
+            desc += " was declined :("
+
+        note = {
+            'userId': user_id,
+            'groupId': group_id,
+            'note_type': "group",
+            'desc': desc
+        }
+        create_notification(note)
+    except:
+        print("create_request_resolved_notification failed")
+        return
+
+
+def resolve_request_notification(user_id, group_id, was_accepted):
+    try:
+        # TODO: Find note with user_id and group_id
+        # TODO: Delete note
+        create_group_request_notification(user_id, group_id, was_accepted)
+    except:
+        print("resolve_request_notification failed")
+        return
 
 
 # Function status: Implemented and tested

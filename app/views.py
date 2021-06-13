@@ -79,6 +79,16 @@ class LoadUser(APIView):
         return user.load_user(user_id=user_id)
 
 
+class SearchUser(APIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            user_id = request.query_params['userId']
+            search_term = request.query_params['username']
+        except KeyError:
+            return invalid_response
+        return user.search_user(search_term, user_id)
+
+
 class UpdateUser(APIView):
     def put(self, request, *args, **kwargs):
         try:

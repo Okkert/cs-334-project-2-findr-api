@@ -366,6 +366,13 @@ def search_user_email(email):
     return u
 
 
+def search_users_by_name(search_term):
+    try:
+        u = session.query(User).filter(User.username.contains(search_term)).all()
+        return u
+    except:
+        return None
+
 # -------------------------------
 # COMMENTS
 # -------------------------------
@@ -491,7 +498,6 @@ def remove_post(post_id):
         return False
 
 
-# Still need to account for errors return False if commit is unsuccessful
 def edit_post_desc(post_id, post_desc):
     try:
         p = session.query(Post).filter(Post.post_id == post_id).first()
@@ -504,7 +510,6 @@ def edit_post_desc(post_id, post_desc):
         return False
 
 
-# Still need to account for errors return False if commit is unsuccessful
 def edit_post_title(post_id, post_title):
     try:
         p = session.query(Post).filter(Post.post_id == post_id).first()
@@ -571,19 +576,14 @@ def unlike_post(post_id, user_id):
         return False
 
 
-# FIXME - Not sure if this is correct
 def post_comment(post_id, user_id, comment_content):
-    c = Comment(post_id, user_id, comment_content)
-    session.add(c)
-    session.commit()
-    return True
-    # try:
-    #     c = Comment(post_id, user_id, comment_content)
-    #     session.add(c)
-    #     session.commit()
-    #     return True
-    # except:
-    #     return False
+    try:
+        c = Comment(post_id, user_id, comment_content)
+        session.add(c)
+        session.commit()
+        return True
+    except:
+        return False
 
 
 def remove_comments(post_id):
@@ -895,9 +895,9 @@ def load_notification(note_id):
         return None
 
 
-def create_notification(user_id, group_id, note_type, status, desc):
+def create_notification(user_id, subject_id, group_id, note_type, status, note_desc):
     try:
-        n = Note(user_id, group_id, note_type, status, desc, datetime.now())
+        n = Note(user_id, subject_id, group_id, note_type, status, note_desc, datetime.now())
         session.add(n)
         session.commit()
         return True
@@ -981,10 +981,6 @@ def update_user_avatar(user_id, avatar):
         return True
     except:
         return False
-
-
-def get_user_avatar(user_id):
-    u = session.query(User).filter(User.user_id == user_id).first()
 
 
 # -------------------------------

@@ -9,6 +9,7 @@ urlpatterns = [
     path('login_user/', views.LoginUser.as_view(), name="login_user"),
     path('logout_user/', views.LogoutUser.as_view(), name="logout_user"),
     path('load_user/', views.LoadUser.as_view(), name="load_user"),
+    path('search_user/', views.SearchUser.as_view(), name="search_user"),
     path('update_user/', views.UpdateUser.as_view(), name="update_user"),
     path('load_feed/', views.LoadFeed.as_view(), name="load_feed"),
     path('load_userId/', views.LoadUserId.as_view(), name="load_user_id"),
