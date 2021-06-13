@@ -89,6 +89,11 @@ def remove_post(post_id, user_id):
             "reason": "Post not found"
         }
         return gen_response(resp.ERR_MISSING, content)
+    elif post is False:
+        content = {
+            "reason": "Internal server error"
+        }
+        return gen_response(resp.ERR_SERVER, content)
 
     # If the user attempting to remove the post did not author the post then check if they are an admin
     if user_id != post.user_id:
