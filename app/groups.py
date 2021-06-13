@@ -421,13 +421,15 @@ def search_groups(search_term, user_id):
                 return gen_response(resp.ERR_SERVER, content)
 
             if membership is None:
-                membership = -1
+                mem = -1
+            else:
+                mem = membership.membership
 
             groups.append({
                 "id": group.group_id,
                 "title": group.group_name,
                 "desc": group.group_desc,
-                "membership": membership.membership,
+                "membership": mem,
                 "private": group.private
             })
 
@@ -441,13 +443,15 @@ def search_groups(search_term, user_id):
                 return gen_response(resp.ERR_SERVER, content)
 
             if membership is None:
-                membership = -1
+                mem = -1
+            else:
+                mem = membership.membership
 
             groups.append({
                 "id": group.group_id,
                 "title": group.group_name,
                 "desc": group.group_desc,
-                "membership": membership.membership,
+                "membership": mem,
                 "private": group.private
             })
 
