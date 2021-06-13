@@ -427,7 +427,7 @@ def search_groups(search_term, user_id):
                 "id": group.group_id,
                 "title": group.group_name,
                 "desc": group.group_desc,
-                "membership": membership,
+                "membership": membership.membership,
                 "private": group.private
             })
 
@@ -447,7 +447,7 @@ def search_groups(search_term, user_id):
                 "id": group.group_id,
                 "title": group.group_name,
                 "desc": group.group_desc,
-                "membership": membership,
+                "membership": membership.membership,
                 "private": group.private
             })
 
