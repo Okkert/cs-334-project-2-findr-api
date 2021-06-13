@@ -922,8 +922,12 @@ def decline_join_request(group_id, user_id):
 
 
 def get_users_groups(user_id):
-
-    user_id = int(user_id)
+    
+    try:
+        user_id = int(user_id)
+    except ValueError:
+        user_id = 2
+        
     g = models.get_users_groups(user_id=user_id)
 
     if g is False:
