@@ -324,36 +324,40 @@ def login(username, email, password, remember_me):
         dict
             JSON Response detailing the success or failure of operation
     """
-    #try:
-    user = None
-    if username is not None:
-        if username_exists(username):
-            user = models.search_username(username)
+    try:
+        user = None
+        if username is not None:
+            if username_exists(username):
+                user = models.search_username(username)
+            else:
+                response = gen_response(resp.ERR_INVALID, {"reason": "Invalid username"})
+                return response
+        elif email is not None:
+            user = models.search_user_email(email)
         else:
-            response = gen_response(resp.ERR_INVALID, {"reason": "Invalid username"})
-            return response
-    elif email is not None:
-        user = models.search_user_email(email)
-    else:
-        return gen_response(resp.ERR_INVALID, {"reason": "Username and email can't both be empty"})
+            return gen_response(resp.ERR_INVALID, {"reason": "Username and email can't both be empty"})
 
-    # Validate query response
-    if user is None:
-        return gen_response(resp.ERR_MISSING, {"reason": "Failed to find user"})
+        # Validate query response
+        if user is None:
+            return gen_response(resp.ERR_MISSING, {"reason": "Failed to find user"})
 
-    # Verify password
-    if sha256_crypt.verify(password, user.password):
-        token_resp = gen_token(user.user_id, password, not remember_me)
-        data = {
-            'token': token_resp,
-            'user_id': user.user_id
-        }
-        return gen_response(resp.OK, data)
-    else:
-        return gen_response(resp.ERR_INVALID, {"reason": "Invalid password"})
-    #except:
-     #   debug_out("login failed")
-     #   return gen_response(resp.ERR_SERVER, None)
+        # Check verified account
+        if user.auth_token.startswith("email"):
+            return gen_response(resp.RESP_INVALID, {"reason:" "You need to verify your account first"})
+
+        # Verify password
+        if sha256_crypt.verify(password, user.password):
+            token_resp = gen_token(user.user_id, password, not remember_me)
+            data = {
+                'token': token_resp,
+                'user_id': user.user_id
+            }
+            return gen_response(resp.OK, data)
+        else:
+            return gen_response(resp.ERR_INVALID, {"reason": "Invalid password"})
+    except:
+        debug_out("login failed")
+        return gen_response(resp.ERR_SERVER, None)
 
 
 def logout(token):

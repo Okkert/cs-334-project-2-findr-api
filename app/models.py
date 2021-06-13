@@ -4,7 +4,7 @@
 # Imports
 #from django.db import models
 from datetime import datetime
-from sqlalchemy import create_engine, Column, Boolean, Integer, String, ForeignKey, Enum, desc
+from sqlalchemy import create_engine, Column, Boolean, Integer, String, ForeignKey, Enum, desc, or_, and_
 from sqlalchemy_utils import database_exists, create_database
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker, relationship

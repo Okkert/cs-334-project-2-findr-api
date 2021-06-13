@@ -1,3 +1,5 @@
+import datetime
+
 import requests
 import math
 from . import models
@@ -450,7 +452,7 @@ def load_post(post_id, user_id):
         "likes": post.post_likes,
         "hasLiked": has_liked,
         "postLocation": post.post_loc,
-        "postTime": post.post_time,
+        "postTime": datetime.datetime.strftime(post.post_time, '%-d %b %Y, %I%p'),
         "postCategory": str(repr(models.catEnum(post.post_cat))).split("'")[1],
         "postComments": post_comments
     }
@@ -745,7 +747,7 @@ def format_posts(posts, user_id):
             "hasLiked": has_liked,
             "postComments": comment_data,
             "postContent": post.post_desc,
-            "postTime": post.post_time,
+            "postTime": datetime.datetime.strftime(post.post_time, '%-d %b %Y, %I%p'),
             "postLocation": post.post_loc
         })
 
