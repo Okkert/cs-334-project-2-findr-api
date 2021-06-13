@@ -382,7 +382,7 @@ def load_group(group_id=None, group_name=None):
 
 
 # Function Status: Complete and tested
-def search_groups(search_term):
+def search_groups(search_term, user_id):
     """Search for all groups with a title containing
     the search term
 
@@ -390,6 +390,9 @@ def search_groups(search_term):
     ----------
     search_term : str
         Name of group that the user would like to leave
+
+    user_id : int
+        ID of the user making the search
 
     Returns
     -------
@@ -410,18 +413,42 @@ def search_groups(search_term):
 
     if groups_name is not None:
         for group in groups_name:
+            membership = models.get_group_member(user_id, group.group_id)
+            if membership is False:
+                content = {
+                    "reason": "Internal server error"
+                }
+                return gen_response(resp.ERR_SERVER, content)
+
+            if membership is None:
+                membership = -1
+
             groups.append({
                 "id": group.group_id,
                 "title": group.group_name,
-                "desc": group.group_desc
+                "desc": group.group_desc,
+                "membership": membership,
+                "private": group.private
             })
 
     if groups_desc is not None:
         for group in groups_desc:
+            membership = models.get_group_member(user_id, group.group_id)
+            if membership is False:
+                content = {
+                    "reason": "Internal server error"
+                }
+                return gen_response(resp.ERR_SERVER, content)
+
+            if membership is None:
+                membership = -1
+
             groups.append({
                 "id": group.group_id,
                 "title": group.group_name,
-                "desc": group.group_desc
+                "desc": group.group_desc,
+                "membership": membership,
+                "private": group.private
             })
 
     content = {
