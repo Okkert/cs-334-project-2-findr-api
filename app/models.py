@@ -935,6 +935,8 @@ def invite_friend(user_a_id, user_b_id):
     f = session.query(Friend).filter(or_(and_(Friend.pal_id == user_a_id, Friend.friend_id == user_b_id), and_(Friend.friend_id == user_a_id, Friend.pal_id == user_b_id))).first()
     if f == None:
         f = Friend(user_a_id, user_b_id, 0)
+        session.add(f)
+        session.commit()
         return True
     else:
         return False
@@ -972,6 +974,20 @@ def get_rel_type(user_a_id, user_b_id):
         elif f2 == None:
             return f1.rel_type
 
+def get_friends(user_id):
+    friend_list = []
+    f1 = session.query(Friend).filter(and_(Friend.pal_id == user_id, Friend.rel_type == 1)).all()
+    f2 = session.query(Friend).filter(and_(Friend.friend_id == user_id, Friend.rel_type == 1)).all()
+
+    if f1 is not None:
+        for frind in f1:
+            friend_list.append(frind.friend_id)
+
+    if f2 is not None:
+        for frind in f2:
+            friend_list.append(frind.pal_id)
+
+    return friend_list
 
 # -------------------------------
 # Helper Function's for avatar
@@ -1031,7 +1047,13 @@ def load_feed_by_user(user_id, filter_user_id):
     except:
         return False
 
-#print(invite_friend(1,2))
+#print(get_friends(3))
+#invite_friend(2,3)
+#accept_friend(3,2)
+#invite_friend(4,3)
+#accept_friend(3,4)
+#print(invite_friend(3,1))
+#print(accept_friend(1,3))
 #print(accept_friend(2,1))
 #print(get_rel_type(1,2))
 #f = Friend(1, 2, 0)
