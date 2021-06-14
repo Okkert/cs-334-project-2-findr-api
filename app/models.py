@@ -792,6 +792,9 @@ def delete_group_posts(group_id):
         p = session.query(Post).filter(Post.group_id == group_id)
         if p.first() is None:
             return True
+        for post in p.all():
+            c = session.query(Comment).filter(Comment.post_id == post.post_id).delete()
+            session.commit()
         p.delete()
         session.commit()
         return True
