@@ -76,9 +76,12 @@ class LoadUser(APIView):
             user_id = request.query_params['userId']
         except KeyError:
             return invalid_response
-        if user_id is None:
+
+        try:
+            test_int = int(user_id)
+        except:
             return invalid_response
-        print("loading " + user_id)
+
         return user.load_user(user_id=user_id)
 
 
