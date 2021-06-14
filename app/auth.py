@@ -244,12 +244,12 @@ def username_exists(username):
             bool
                 TRUE if username is valid, FALSE otherwise.
             """
-    try:
-        user = models.search_username(username)
-        return user is not None
-    except:
-        debug_out("valid_username failed")
-        return False
+    #try:
+    user = models.search_username(username)
+    return user is not None
+    #except:
+    #    debug_out("valid_username failed")
+    #    return False
 
 
 def email_exists(email):

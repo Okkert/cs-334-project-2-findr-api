@@ -63,24 +63,24 @@ def load_user(user_id):
     dict
         JSON Response detailing the success or failure of operation
     """
-    try:
-        user = models.search_user(user_id)
+    #try:
+    user = models.search_user(user_id)
 
-        if user is None:
-            return gen_response(resp.ERR_MISSING, {"reason": "Failed to find user"})
+    if user is None:
+        return gen_response(resp.ERR_MISSING, {"reason": "Failed to find user"})
 
-        user_info = {
-            'id': user.user_id,
-            'username': user.username,
-            'email': user.email,
-            'avatar': user.avatar,
-            'bio': user.bio
-        }
+    user_info = {
+        'id': user.user_id,
+        'username': user.username,
+        'email': user.email,
+        'avatar': user.avatar,
+        'bio': user.bio
+    }
 
-        return gen_response(resp.OK, {"user": user_info})
-    except:
-        print("load_user failed")
-        return RESP_SERVER
+    return gen_response(resp.OK, {"user": user_info})
+    #except:
+    #    print("load_user failed")
+    #    return RESP_SERVER
 
 
 # FIXME: This still needs queries
