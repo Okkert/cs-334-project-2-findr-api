@@ -222,19 +222,38 @@ def commit_changes():
 # Helper Function's for user.py
 # -------------------------------
 
-def delete_user_data(user_id):
-    try:
-        c = session.query(Comment).filter(Comment.user_id == user_id).delete()
-        p = session.query(Post).filter(Post.user_id == user_id).delete()
-        m = session.query(Member).filter(Member.user_id == user_id).delete()
-        l = session.query(Like).filter(Like.user_id == user_id).delete()
-        f = session.query(Friend).filter(Friend.user_id == user_id).delete()
-        n = session.query(Note).filter(Note.user_id == user_id).delete()
-        u = session.query(User).filter(User.user_id == user_id).delete()
-        session.commit()
+def remove_user_comments(user_id):
+    c = session.query(Comment).filter(Comment.user_id == user_id).delete()
+    session.commit()
+
+def remove_user_posts(user_id):
+    p = session.query(Post).filter(Post.user_id == user_id)
+    
+    if p.first() is None:
         return True
-    except:
-        return False
+    
+    for post in p.all():
+        c = session.query(Comment).filter(Comment.post_id == post.post_id).delete()
+        session.commit()
+        
+    p.delete()
+    session.commit()
+
+def remove_user_relationships(user_id):
+    f = session.query(Friend).filter(Friend.user_id == user_id).delete()
+    session.commit()
+
+def remove_user_memberships(user_id):
+    m = session.query(Member).filter(Member.user_id == user_id).delete()
+    session.commit()
+
+def remove_user_notification(user_id):
+    n = session.query(Note).filter(Note.user_id == user_id).delete()
+    session.commit()
+
+def remove_user(user_id):
+    n = session.query(User).filter(User.user_id == user_id).delete()
+    session.commit()
 
 
 # Insert's a user into the DB, only requires username, email and password
