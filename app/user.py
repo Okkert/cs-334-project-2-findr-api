@@ -170,8 +170,11 @@ def delete_user(user_id):
         models.remove_user_memberships(user_id)
         # Notes
         models.remove_user_notification(user_id)
-        user.delete()
-        models.commit_changes()
+        # User
+        models.remove_user(user_id)
+        
+        #user.delete()
+        #models.commit_changes()
         return resp.RESP_OK
     except:
         return RESP_SERVER
