@@ -1071,3 +1071,24 @@ def update_userAvatar(user_id, avatar):
     u.avatar = avatar
     session.commit()
     return True
+
+
+def delete_user_data(user_id):
+    try:
+        c = session.query(Comment).filter(Comment.user_id == user_id).delete()
+        session.commit()
+        l = session.query(Like).filter(Like.user_id == user_id).delete()
+        session.commit()
+        p = session.query(Post).filter(Post.user_id == user_id).delete()
+        session.commit()
+        m = session.query(Member).filter(Member.user_id == user_id).delete()
+        session.commit()
+        f = session.query(Friend).filter(Friend.friend_id == user_id).delete()
+        session.commit()
+        n = session.query(Note).filter(Note.notified_id == user_id).delete()
+        session.commit()
+        u = session.query(User).filter(User.user_id == user_id).delete()
+        session.commit()
+        return True
+    except:
+        return False
