@@ -18,10 +18,10 @@ import enum
 
 # After install type into terminal
 
-# psql postgres://avnadmin:v70nehaiku1m4p8f@pg-3efa34b9-pretorius-b301.aivencloud.com:23603/defaultdb?sslmode=require
+# psql postgres://avnadmin:v70nehaiku1m4p8f@pg-3efa34b9-pretorius-b301.aivencloud.com:23603/findrfinal?sslmode=require
 
 # Constants
-DB_URI = "postgresql+psycopg2://avnadmin:v70nehaiku1m4p8f@pg-3efa34b9-pretorius-b301.aivencloud.com:23603/findr?sslmode=require"
+DB_URI = "postgresql+psycopg2://avnadmin:v70nehaiku1m4p8f@pg-3efa34b9-pretorius-b301.aivencloud.com:23603/findrfinal?sslmode=require"
 
 engine = create_engine(DB_URI, echo = False)
 
@@ -1060,3 +1060,14 @@ def load_feed_by_user(user_id, filter_user_id):
     except:
         return False
 
+def get_post(group_id, user_id, post_title):
+
+    p = session.query(Post).filter(Post.group_id == group_id).filter(Post.user_id == user_id).filter(Post.post_title == post_title).first()
+    print(p)
+    return p
+
+def update_userAvatar(user_id, avatar):
+    u = session.query(User).filter(User.user_id == user_id).first()
+    u.avatar = avatar
+    session.commit()
+    return True
