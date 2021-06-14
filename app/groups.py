@@ -386,17 +386,21 @@ def load_group(group_id=None, group_name=None):
 def search_groups(search_term, user_id):
     """Search for all groups with a title containing
     the search term
+
     Parameters
     ----------
     search_term : str
         Name of group that the user would like to leave
+
     user_id : int
         ID of the user making the search
+
     Returns
     -------
     dict
         JSON Response of all groups found as well as whether the user is
         a member of the group
+
     """
     groups = []
     groups_name = models.search_groups_by_name(search_term)
@@ -418,13 +422,15 @@ def search_groups(search_term, user_id):
                 return gen_response(resp.ERR_SERVER, content)
 
             if membership is None:
-                membership = -1
+                mem = -1
+            else:
+                mem = membership.membership
 
             groups.append({
                 "id": group.group_id,
                 "title": group.group_name,
                 "desc": group.group_desc,
-                "membership": membership.membership,
+                "membership": mem,
                 "private": group.private
             })
 
@@ -438,13 +444,15 @@ def search_groups(search_term, user_id):
                 return gen_response(resp.ERR_SERVER, content)
 
             if membership is None:
-                membership = -1
+                mem = -1
+            else:
+                mem = membership.membership
 
             groups.append({
                 "id": group.group_id,
                 "title": group.group_name,
                 "desc": group.group_desc,
-                "membership": membership.membership,
+                "membership": mem,
                 "private": group.private
             })
 
