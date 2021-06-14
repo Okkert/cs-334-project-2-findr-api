@@ -217,6 +217,24 @@ class Like(Model):
 
 def commit_changes():
     session.commit()
+    
+# -------------------------------
+# Helper Function's for user.py
+# -------------------------------
+
+def delete_user_data(user_id):
+    try:
+        c = session.query(Comment).filter(Comment.user_id == user_id).delete()
+        p = session.query(Post).filter(Post.user_id == user_id).delete()
+        m = session.query(Member).filter(Member.user_id == user_id).delete()
+        l = session.query(Like).filter(Like.user_id == user_id).delete()
+        f = session.query(Friend).filter(Friend.user_id == user_id).delete()
+        n = session.query(Note).filter(Note.user_id == user_id).delete()
+        u = session.query(User).filter(User.user_id == user_id).delete()
+        session.commit()
+        return True
+    except:
+        return False
 
 
 # Insert's a user into the DB, only requires username, email and password
