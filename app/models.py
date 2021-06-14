@@ -176,8 +176,7 @@ class Note(Model):
     notified = relationship("User", foreign_keys=[notified_id])
     subject = relationship("User", foreign_keys=[subject_id])
 
-    def __init__(self, note_id, notified_id, group_id, subject_id, note_type, note_status, note_desc, note_birthday):
-        self.note_id = note_id
+    def __init__(self, notified_id, group_id, subject_id, note_type, note_status, note_desc, note_birthday):
         self.notified_id = notified_id
         self.group_id = group_id
         self.subject_id = subject_id
@@ -187,7 +186,7 @@ class Note(Model):
         self.note_birthday = note_birthday
 
     def __repr__(self):
-        return f"Note( '{self.user_id}', '{self.group_id}', {self.note_type}', '{self.note_status}', '{self.note_desc}', '{self.note_birthday}') "
+        return f"Note( '{self.notified_id}', '{self.group_id}', {self.note_type}', '{self.note_status}', '{self.note_desc}', '{self.note_birthday}') "
 
 
 class Friend(Model):
@@ -471,10 +470,10 @@ def search_user_by_id(user_id):
     try:
         u = session.query(User).get(user_id)
         if u is None:
-            return -1
+            return None
         return u
     except:
-        return False
+        return None
 
 
 def search_user_by_username(username):
@@ -890,10 +889,10 @@ def get_posts_from_category(category, group_id):
 
 def load_notifications(user_id):
     try:
-        n = session.query(Note).filter(Note.user_id == user_id).all()
+        n = session.query(Note).filter(Note.notified_id == user_id).all()
         return n
     except:
-        return False
+        return None
 
 
 def load_notification(note_id):
@@ -905,13 +904,15 @@ def load_notification(note_id):
 
 
 def create_notification(notified_id, subject_id, group_id, note_type, status, note_desc):
-    try:
-        n = Note(notified_id, subject_id, group_id, note_type, status, note_desc, datetime.now())
-        session.add(n)
-        session.commit()
-        return True
-    except:
-        return False
+    #try:
+    print("notification creating")
+    n = Note(notified_id=notified_id, group_id=group_id, subject_id=subject_id, note_type=note_type, note_status=status, note_desc=note_desc, note_birthday=datetime.now())
+    session.add(n)
+    session.commit()
+    print("success")
+    return True
+    #except:
+     #   return False
 
 
 def delete_notification(note_id):
@@ -1002,6 +1003,24 @@ def get_friends(user_id):
 
     return friend_list
 
+
+def add_friend(user_a_id, user_b_id):
+    f = session.query(Friend).filter(or_(and_(Friend.pal_id == user_a_id, Friend.friend_id == user_b_id),
+                                         and_(Friend.friend_id == user_a_id, Friend.pal_id == user_b_id))).first()
+    if f is None:
+        f = Friend(user_a_id, user_b_id, 1)
+        session.add(f)
+        session.commit()
+        return True
+    else:
+        f.rel_type = 1
+        session.commit()
+
+
+def load_invites(user_id):
+    pending = session.query(Friend).filter(and_(Friend.friend_id == user_id, Friend.rel_type == 0)).all()
+    return pending
+
 # -------------------------------
 # Helper Function's for avatar
 # -------------------------------
@@ -1059,6 +1078,7 @@ def load_feed_by_user(user_id, filter_user_id):
         return posts
     except:
         return False
+
 
 def get_post(group_id, user_id, post_title):
 

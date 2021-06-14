@@ -63,24 +63,30 @@ def load_user(user_id):
     dict
         JSON Response detailing the success or failure of operation
     """
-    #try:
-    user = models.search_user(user_id)
+    try:
 
-    if user is None:
-        return gen_response(resp.ERR_MISSING, {"reason": "Failed to find user"})
+        try:
+            test = int(user_id)
+        except:
+            return resp.RESP_INVALID
 
-    user_info = {
-        'id': user.user_id,
-        'username': user.username,
-        'email': user.email,
-        'avatar': user.avatar,
-        'bio': user.bio
-    }
+        user = models.search_user(user_id)
 
-    return gen_response(resp.OK, {"user": user_info})
-    #except:
-    #    print("load_user failed")
-    #    return RESP_SERVER
+        if user is None:
+            return gen_response(resp.ERR_MISSING, {"reason": "Failed to find user"})
+
+        user_info = {
+            'id': user.user_id,
+            'username': user.username,
+            'email': user.email,
+            'avatar': user.avatar,
+            'bio': user.bio
+        }
+
+        return gen_response(resp.OK, {"user": user_info})
+    except:
+        print("load_user failed")
+        return RESP_SERVER
 
 
 # FIXME: This still needs queries
@@ -250,24 +256,26 @@ def add_friend(id_a, id_b):
         dict
             JSON Response detailing the success or failure of operation
         """
-    try:
-        if id_a == id_b:
-            return gen_response(resp.ERR_INVALID, {"reason": "If you don't love yourself, how in the hell are you going to add yourself as a friend?"})
+    #try:
+    if id_a == id_b:
+        return gen_response(resp.ERR_INVALID, {"reason": "If you don't love yourself, how in the hell are you going to add yourself as a friend?"})
 
-        # TODO: Create query
-        rel_type = models.get_rel_type(id_a, id_b)
+    # TODO: Create query
+    rel_type = models.get_rel_type(id_a, id_b)
 
-        if rel_type is not None:
-            if rel_type == REL_FRIEND:
-                return gen_response(resp.ERR_INVALID, {"reason": "Users are already friends"})
-            elif rel_type == REL_BLOCK:
-                return gen_response(resp.ERR_INVALID, {"reason": "Relationships are blocked between users"})
-        # TODO: Create query
-        models.set_rel_type(id_a, id_b, REL_FRIEND)
-        return gen_response(resp.OK, None)
-    except:
-        print("add_friend failed")
-        return gen_response(resp.ERR_SERVER, {"reason": "Oh no! Our internal issues are getting in the way of companionship D:"})
+    if rel_type is not None:
+        if rel_type == REL_FRIEND:
+            return gen_response(resp.ERR_INVALID, {"reason": "Users are already friends"})
+        elif rel_type == REL_BLOCK:
+            return gen_response(resp.ERR_INVALID, {"reason": "Relationships are blocked between users"})
+    # TODO: Create query
+    models.add_friend(id_a, id_b)
+    notes.create_friend_added_note(id_a, id_b)
+
+    return gen_response(resp.OK, None)
+    #except:
+    #    print("add_friend failed")
+     #   return gen_response(resp.ERR_SERVER, {"reason": "Oh no! Our internal issues are getting in the way of companionship D:"})
 
 
 def invite_friend(id_a, id_b):
@@ -290,11 +298,16 @@ def invite_friend(id_a, id_b):
         if id_a == id_b:
             return gen_response(resp.ERR_INVALID, {"reason": "If you don't love yourself, how in the hell are you going to add yourself as a friend?"})
 
-        # TODO: Create query
+        user_a = models.search_user_by_id(id_a)
+        user_b = models.search_user_by_id(id_b)
+
+        if user_a is None or user_b is None:
+            return gen_missing("User")
+
+
         rel_type = models.get_rel_type(id_a, id_b)
 
         if rel_type is None:
-            # TODO: Create query - set relationship to pending
             models.invite_friend(id_a, id_b)
 
             try:
@@ -307,6 +320,47 @@ def invite_friend(id_a, id_b):
     except:
         print("invite_friend incomplete")
         return gen_response(resp.ERR_SERVER, {"reason": "Oops! Something went wrong D:"})
+
+
+def respond_to_invite(id_a, id_b, accepted):
+    try:
+        if id_a == id_b:
+            return resp.RESP_INVALID
+
+        if not models.user_exists(id_a) or not models.user_exists(id_b):
+            return gen_missing("User")
+
+        cur_rel = models.get_rel_type(id_a, id_b)
+
+        if cur_rel is None:
+            return resp.RESP_INVALID
+
+        if cur_rel is not 0:
+            return resp.RESP_INVALID
+
+        models.respond_to_friend_invite(id_a, id_b, accepted)
+        return resp.RESP_OK
+    except:
+        print("respond_to_invite failed")
+        return resp.RESP_SERVER
+
+
+def load_invites(user_id):
+    try:
+        pending = models.load_invites(user_id)
+        invites = []
+        for person in pending:
+            u = models.search_user_by_id(person.user_id)
+            invites.append({
+                "userId": u.user_id,
+                "username": u.username,
+                "avatar": u.avatar,
+                "bio": u.bio
+            })
+        return gen_response(resp.OK, {"invites": invites})
+    except:
+        print("load_invite failed")
+        return resp.RESP_SERVER
 
 
 def update_avatar(user_id, url):

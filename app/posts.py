@@ -698,7 +698,7 @@ def get_lat_long(location):
     else:
         return False
 
-    
+
 def convert_lat_long(lat, long):
     url = f"https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{long}&key={API_KEY}"
     response = requests.get(url=url)
@@ -709,7 +709,7 @@ def convert_lat_long(lat, long):
         return location
     except:
         return "South Africa"
-    
+
 
 def format_posts(posts, user_id):
     post_data = []
@@ -898,3 +898,5 @@ def update_user_avatar(user_id, avatar):
     }
     return gen_response(resp.OK, content)
 
+
+convert_lat_long(2, 2)

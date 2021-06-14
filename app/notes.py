@@ -1,4 +1,4 @@
-from . import models
+from . import models, auth
 import smtplib
 from .utils.toolbox import gen_response, gen_missing, debug_out, tattle, behaved
 from .utils import response_constants as resp
@@ -20,16 +20,23 @@ def load_notifications(user_id):
 
     """
 
+    if not auth.user_exists_and_valid(user_id):
+        return gen_missing("User")
+
     notes = models.load_notifications(user_id=user_id)
-    if notes is False:
+
+    print(notes)
+    if notes is None:
         return gen_missing("notifications")
 
     note_data = []
     for note in notes:
         note_data.append({
             "noteId": note.note_id,
-            "userId": note.user_id,
+            "notifiedId": note.notified_id,
+            "subjectId": note.subject_id,
             "status": note.note_status,
+            "type": str(repr(models.noteType(note.note_type))).split("'")[1],
             "desc": note.note_desc,
             "time": note.note_birthday
         })
@@ -59,8 +66,9 @@ def create_note(note):
 
     """
     try:
+        print("Adding note to db: ")
         print(note)
-        user_id = note["userId"]
+        notified_id = note["notifiedId"]
         group_id = note["groupId"]
         subject_id = note["subjectId"]
         status = False
@@ -70,14 +78,17 @@ def create_note(note):
         print("params screwed up")
         return resp.RESP_INVALID
 
-    if not models.user_exists(user_id):
+    if not models.user_exists(notified_id):
+        print("Note failed to find user")
         return gen_missing("user")
 
     if not models.group_exists(group_id):
+        print("Note failed to find user")
         return gen_missing("group")
 
-    valid = models.create_note(user_id=user_id, subject_id=subject_id, group_id=group_id, note_type=note_type, status=status,  desc=desc)
+    valid = models.create_notification(notified_id=notified_id, subject_id=subject_id, group_id=group_id, note_type=note_type, status=status,  note_desc=desc)
     if valid is False:
+        print("Notes: SERVER ERROR")
         content = {
             "reason": "Internal server error"
         }
@@ -99,6 +110,10 @@ def delete_notification(note_id):
         JSON Response detailing the success or failure of deleting the notification
 
     """
+
+    if not models.note_exists(note_id):
+        return gen_missing("notification")
+
     status = models.delete_notification(note_id=note_id)
     if status is False:
         return gen_missing("notification")
@@ -146,6 +161,10 @@ def load_notification(note_id):
 
     """
     try:
+
+        if not models.note_exists(note_id):
+            return gen_missing("notification")
+
         n = models.load_notification(note_id)
 
         if n is None:
@@ -153,7 +172,8 @@ def load_notification(note_id):
 
         note_data = {
             "noteId": n.note_id,
-            "userId": n.user_id,
+            "notifiedId": n.notified_id,
+            "subjectId": n.subject_id,
             "groupId": n.group_id,
             "status": n.note_status,
             "desc": n.note_desc,
@@ -169,13 +189,13 @@ def load_notification(note_id):
         return resp.RESP_SERVER
 
 
-def construct_note(user_id, subject_id, group_id, note_type, desc):
+def construct_note(notified_id, subject_id, group_id, note_type, desc):
     """Constructs a note dictionary
 
     Parameters
     ----------
-    user_id : int
-        Unique note identifier
+    notified_id : int
+        Unique user identifier
     subject_id : int
         Identifier of the subject of the notification
     group_id : int
@@ -192,12 +212,14 @@ def construct_note(user_id, subject_id, group_id, note_type, desc):
 
     """
     note = {
-        'userId': user_id,
+        'notifiedId': notified_id,
         'subjectId': subject_id,
         'groupId': group_id,
         'note_type': note_type,
         'desc': desc
     }
+    print("Constructed note: ")
+    print(note)
     return note
 
 
@@ -216,7 +238,11 @@ def create_welcome_note(user_id):
 
     """
     try:
-        note = construct_note(user_id, user_id, 69, 'dev', "Welcome to Findr!")
+        if not auth.user_exists_and_valid(user_id):
+            return gen_missing("User")
+
+        note = construct_note(user_id, user_id, 1, 'dev', "Welcome to Findr!")
+        create_note(note)
     except:
         print("create_welcome_note failed")
         return
@@ -239,9 +265,15 @@ def create_friend_request_note(user_id, friend_id):
 
     """
     try:
+        if not auth.user_exists_and_valid(user_id):
+            return gen_missing("User")
+
+        if not auth.user_exists_and_valid(friend_id):
+            return gen_missing("User")
+
         user_a = models.search_user_by_id(user_id)
         msg = user_a.username + " would like to connect!"
-        note = construct_note(friend_id, user_id, 69, 'friend', msg)
+        note = construct_note(friend_id, user_id, 1, 'friend', msg)
         create_note(note)
     except:
         print("create_friend_request_note failed")
@@ -265,16 +297,27 @@ def create_friend_added_note(user_id, friend_id):
 
     """
     try:
+
+        try:
+            test = int(user_id)
+            test = int(friend_id)
+        except:
+            return resp.RESP_INVALID
+
         user_a = models.search_user_by_id(user_id)
         user_b = models.search_user_by_id(friend_id)
+
+        if user_a is None or user_b is None:
+            print("Note: users not found")
+            return
 
         msg_a = "You and " + user_b.username + " have connected!"
         msg_b = "You and " + user_a.username + " have connected!"
 
-        note = construct_note(user_id, friend_id, 69, 'friend', msg_a)
-        create_note(note)
-        note = construct_note(friend_id, user_id, 69, 'friend', msg_b)
-        create_note(note)
+        note = construct_note(user_id, friend_id, 1, 'friend', msg_a)
+        res = create_note(note)
+        note = construct_note(friend_id, user_id, 1, 'friend', msg_b)
+        res = create_note(note)
     except:
         return resp.RESP_SERVER
 

@@ -240,6 +240,25 @@ class InviteFriend(APIView):
         return user.invite_friend(user_a, user_b)
 
 
+class RespondToInvite(APIView):
+    def post(self, request, *args, **kwargs):
+        try:
+            user_a = request.query_params['userId']
+            user_b = request.query_params['friendId']
+            accepted = request.query_params['accepted']
+        except KeyError:
+            return invalid_response
+        return user.respond_to_invite(user_a, user_b, accepted)
+
+
+class LoadInvites(APIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            user_id = request.query_params['userId']
+        except KeyError:
+            return invalid_response
+        return user.load_invites(user_id)
+
 # ------------------- GROUPS ------------------- #
 
 class Group(APIView):
@@ -558,21 +577,23 @@ class Notification(APIView):
     # Create
     def post(self, request, *args, **kwargs):
         try:
-            user_id = request.query_params['userId']
+            notified_id = request.query_params['notifiedId']
+            subject_id = request.query_params['subjectId']
             group_id = 69
             if 'groupId' in request.query_params:
                 group_id = request.query_params['groupId']
             desc = request.query_params['desc']
             note_type = request.query_params['type']
             note = {
-                'userId': user_id,
+                'notifiedId': notified_id,
+                'subjectId': subject_id,
                 'groupId': group_id,
                 'desc': desc,
                 'note_type': note_type
             }
         except KeyError:
             return invalid_response
-        return notes.create_notification(note)
+        return notes.create_note(note)
 
     # Read
     def get(self, request, *args, **kwargs):
@@ -598,3 +619,12 @@ class Notification(APIView):
         except KeyError:
             return invalid_response
         return notes.delete_notification(note_id=note_id)
+
+
+class LoadNotifications(APIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            user_id = request.query_params['userId']
+        except KeyError:
+            return invalid_response
+        return notes.load_notifications(user_id)

@@ -5,7 +5,9 @@
 # Authentication management
 
 # FIXME: Import paths are a bit weird here
+import csv
 import re
+import smtplib
 
 from passlib.handlers.sha2_crypt import sha256_crypt
 
@@ -15,6 +17,7 @@ from rest_framework import authentication
 from . import models, notes
 import jwt
 import datetime
+import random
 
 # This is the salt used for hashing, but we call it pepper so that hackers can't find it as easily
 PEPPER = "dLO\\x8e\\x90\\xa1\\xc2D\\xf6&[\\xc6\\x165\\xf5\\x84b\\xc9\\x99\\xa4\\xa8\\xf7VQ"
@@ -199,6 +202,26 @@ def confirm_token(token):
         return gen_response(resp.ERR_SERVER, {})
 
 
+def gen_cool_code():
+
+    with open('adjectives.csv', newline='') as fa:
+        reader = csv.reader(fa)
+        data = list(reader)
+        adjectives = data
+
+    with open('food.csv', newline='') as fo:
+        reader = csv.reader(fo)
+        data = list(reader)
+        foods = data
+
+
+    adj = random.choice(adjectives[0])
+    food = random.choice(foods[0])
+    number = random.randint(10, 99)
+    code = adj + "-" + food + "-" + str(number)
+    return code
+
+
 #  -  -  -  -  #
 # Validation   #
 #  -  -  -  -  #
@@ -244,12 +267,21 @@ def username_exists(username):
             bool
                 TRUE if username is valid, FALSE otherwise.
             """
-    #try:
-    user = models.search_username(username)
-    return user is not None
-    #except:
-    #    debug_out("valid_username failed")
-    #    return False
+    try:
+        user = models.search_username(username)
+        return user is not None
+    except:
+        debug_out("valid_username failed")
+        return False
+
+
+def user_exists_and_valid(user_id):
+    try:
+        test = int(user_id)
+        user = models.search_user_by_id(user_id)
+        return user is not None
+    except:
+        return False
 
 
 def email_exists(email):
@@ -264,7 +296,6 @@ def email_exists(email):
 #  -  -  -  -  -  #
 #  Login/Register #
 #  -  -  -  -  -  #
-
 
 def register(username, email, password):
     """Attempts to register user
@@ -295,8 +326,13 @@ def register(username, email, password):
         if behaved(board):
             models.insert_user(username, email, hash_pass)
             response = gen_response(resp.OK, {})
-            # TODO: Test
+
             u = models.search_username(username)
+
+            # Notifications + Email Verification
+            verify_code = gen_cool_code()
+            u.auth_token = "email " + verify_code
+            send_registration_email(email, username, verify_code)
             notes.create_welcome_note(u.user_id)
         else:
             response = gen_response(resp.ERR_INVALID, {"reason": board})
@@ -408,5 +444,36 @@ def logout(token):
         debug_out("logout failed")
         return gen_response(resp.ERR_SERVER, None)
 
+
+# Function status: Implemented and tested
+def send_registration_email(email, username, code):
+    """Sends a registration email
+
+    Parameters
+    ----------
+    email : str
+        The email of the user registering for Findr
+    username : str
+        The username of the user registering for Findr
+    code : str
+        Email verification code
+    """
+    print(code)
+    from_email = "noreply.findr@gmail.com"
+    paprika = "hyhxnctegricdygd"
+    subject = "Welcome to Findr!"
+    body = f"Hey {username},\n\nWelcome to Findr!\nYou're only one step away from meeting the loves of your life" \
+           f" or sharing your passion for hot tubs.\n\nYour email verification code is: {code}\n\n" \
+           f"Have fun and remember: Talk to strangers!\n\nxoxo\n\nThe Findr Team"
+
+    msg = f"Subject: {subject}\n\n{body}"
+
+    with smtplib.SMTP("smtp.gmail.com", 587) as connection:
+        connection.ehlo()
+        connection.starttls()
+        connection.ehlo()
+        connection.login(user=from_email, password=paprika)
+        connection.sendmail(from_addr=from_email, to_addrs=email, msg=msg)
+        connection.close()
 
 
