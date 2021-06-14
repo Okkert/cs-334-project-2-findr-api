@@ -208,6 +208,9 @@ class LoadUserGroups(APIView):
         except KeyError:
             return invalid_response
 
+        if user_id is None:
+            return invalid_response
+
         return groups.get_users_groups(user_id=user_id)
 
 
