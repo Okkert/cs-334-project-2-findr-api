@@ -727,7 +727,7 @@ def format_posts(posts, user_id):
                 "author": {
                     "userId": author.user_id,
                     "username": author.username,
-                    "avatar": user.avatar
+                    "avatar": author.avatar
                 },
                 "commentContent": comment.comment_content,
                 "commentTime": comment.comment_time,
