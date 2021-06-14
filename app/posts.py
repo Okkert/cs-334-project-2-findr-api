@@ -50,6 +50,13 @@ def create_post(post):
         }
         return gen_response(resp.ERR_INVALID, content)
 
+    try:
+        lat = float(post_location.split(",")[0])
+        long = float(post_location.split(",")[1])
+        post_location = convert_lat_long(lat, long)
+    except:
+        post_location = post["location"]
+
     p = models.create_post(user_id, group_id, post_title, post_body, post_location, post_cat)
 
     if p is False:
@@ -691,6 +698,18 @@ def get_lat_long(location):
     else:
         return False
 
+    
+def convert_lat_long(lat, long):
+    url = f"https://maps.googleapis.com/maps/api/geocode/json?latlng={lat},{long}&key={API_KEY}"
+    response = requests.get(url=url)
+    try:
+        data = response.json()
+        print(data)
+        location = data["results"][0]["address_components"][3]["long_name"]
+        return location
+    except:
+        return "South Africa"
+    
 
 def format_posts(posts, user_id):
     post_data = []
