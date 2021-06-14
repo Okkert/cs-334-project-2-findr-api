@@ -71,7 +71,7 @@ class User(Model):
     # relationship with member table
     member = relationship('Member', backref="user")
     # relationship with note table
-    note = relationship('Note', backref="user")
+    #note = relationship('Note', backref="user")
     #sub_id = relationship('Note', backref="subject")
 
     def __init__(self, username, email, password):
@@ -165,17 +165,22 @@ class Member(Model):
 class Note(Model):
     __tablename__ = 'note'
     note_id = Column(Integer, primary_key=True)
-    user_id = Column(Integer, ForeignKey('user.user_id'))
-    group_id = Column(Integer, ForeignKey('group.group_id')) # Needed for loading all group requests
-    #subject_id = Column(Integer, ForeignKey('user.user_id')) # Needed for subjects
+    notified_id = Column(Integer, ForeignKey("user.user_id"))
+    group_id = Column(Integer, ForeignKey("group.group_id"))
+    subject_id = Column(Integer, ForeignKey("user.user_id"))
     note_type = Column(Enum(noteType))  # 0 = friends; 1 = groups Enum
     note_status = Column(Boolean, nullable=False)  # true = read, false = unread
     note_desc = Column(String)
     note_birthday = Column(String, default=datetime)
 
-    def __init__(self, user_id, group_id, note_type, note_status, note_desc, note_birthday):
-        self.user_id = user_id
+    notified = relationship("User", foreign_keys=[notified_id])
+    subject = relationship("User", foreign_keys=[subject_id])
+
+    def __init__(self, note_id, notified_id, group_id, subject_id, note_type, note_status, note_desc, note_birthday):
+        self.note_id = note_id
+        self.notified_id = notified_id
         self.group_id = group_id
+        self.subject_id = subject_id
         self.note_type = note_type
         self.note_status = note_status
         self.note_desc = note_desc
@@ -216,43 +221,6 @@ class Like(Model):
 
 
 def commit_changes():
-    session.commit()
-    
-# -------------------------------
-# Helper Function's for user.py
-# -------------------------------
-
-def remove_user_comments(user_id):
-    c = session.query(Comment).filter(Comment.user_id == user_id).delete()
-    session.commit()
-
-def remove_user_posts(user_id):
-    p = session.query(Post).filter(Post.user_id == user_id)
-    
-    if p.first() is None:
-        return True
-    
-    for post in p.all():
-        c = session.query(Comment).filter(Comment.post_id == post.post_id).delete()
-        session.commit()
-        
-    p.delete()
-    session.commit()
-
-def remove_user_relationships(user_id):
-    f = session.query(Friend).filter(Friend.user_id == user_id).delete()
-    session.commit()
-
-def remove_user_memberships(user_id):
-    m = session.query(Member).filter(Member.user_id == user_id).delete()
-    session.commit()
-
-def remove_user_notification(user_id):
-    n = session.query(Note).filter(Note.user_id == user_id).delete()
-    session.commit()
-
-def remove_user(user_id):
-    n = session.query(User).filter(User.user_id == user_id).delete()
     session.commit()
 
 
@@ -829,9 +797,6 @@ def delete_group_posts(group_id):
         p = session.query(Post).filter(Post.group_id == group_id)
         if p.first() is None:
             return True
-        for post in p.all():
-            c = session.query(Comment).filter(Comment.post_id == post.post_id).delete()
-            session.commit()
         p.delete()
         session.commit()
         return True
@@ -939,9 +904,9 @@ def load_notification(note_id):
         return None
 
 
-def create_notification(user_id, subject_id, group_id, note_type, status, note_desc):
+def create_notification(notified_id, subject_id, group_id, note_type, status, note_desc):
     try:
-        n = Note(user_id, subject_id, group_id, note_type, status, note_desc, datetime.now())
+        n = Note(notified_id, subject_id, group_id, note_type, status, note_desc, datetime.now())
         session.add(n)
         session.commit()
         return True
@@ -981,38 +946,46 @@ def invite_friend(user_a_id, user_b_id):
     else:
         return False
 
-def accept_friend(user_b_id, user_a_id):
+
+def respond_to_friend_invite(user_b_id, user_a_id, accepted):
     f = session.query(Friend).filter(or_(and_(Friend.pal_id == user_a_id, Friend.friend_id == user_b_id), and_(Friend.friend_id == user_a_id, Friend.pal_id == user_b_id))).first()
-    if f == None:
+    if f is None:
         return False
     else:
         f1 = session.query(Friend).filter(and_(Friend.pal_id == user_a_id, Friend.friend_id == user_b_id)).first()
         f2 = session.query(Friend).filter(and_(Friend.friend_id == user_a_id, Friend.pal_id == user_b_id)).first()
 
-        if f1 == None:
+        if not accepted:
+            f1.delete()
+            f2.delete()
+            session.commit()
+            return True
+
+        if f1 is None:
             f2.rel_type = 1
             session.commit()
-
-        elif f2 == None:
+        elif f2 is None:
             f1.rel_type = 1
             session.commit()
 
         return True
 
+
 # Returns None if no relation exists between user A and B, else returns the type, i.e False == Pending and True == Friends
 def get_rel_type(user_a_id, user_b_id):
     f = session.query(Friend).filter(or_(and_(Friend.pal_id == user_a_id, Friend.friend_id == user_b_id), and_(Friend.friend_id == user_a_id, Friend.pal_id == user_b_id))).first()
-    if f == None:
+    if f is None:
         return None
     else:
         f1 = session.query(Friend).filter(and_(Friend.pal_id == user_a_id, Friend.friend_id == user_b_id)).first()
         f2 = session.query(Friend).filter(and_(Friend.friend_id == user_a_id, Friend.pal_id == user_b_id)).first()
 
-        if f1 == None:
+        if f1 is None:
             return f2.rel_type
 
-        elif f2 == None:
+        elif f2 is None:
             return f1.rel_type
+
 
 def get_friends(user_id):
     friend_list = []
@@ -1087,16 +1060,3 @@ def load_feed_by_user(user_id, filter_user_id):
     except:
         return False
 
-#print(get_friends(3))
-#invite_friend(2,3)
-#accept_friend(3,2)
-#invite_friend(4,3)
-#accept_friend(3,4)
-#print(invite_friend(3,1))
-#print(accept_friend(1,3))
-#print(accept_friend(2,1))
-#print(get_rel_type(1,2))
-#f = Friend(1, 2, 0)
-#session.add(f)
-#session.commit()
-#invite_friend(1,2)
