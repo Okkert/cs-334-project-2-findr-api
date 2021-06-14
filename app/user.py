@@ -161,26 +161,10 @@ def delete_user(user_id):
         if user is None:
             return gen_missing("user")
 
-        # Remove dependencies
+        status = models.delete_user_data(user_id)
+        if status is False:
+            return RESP_SERVER
 
-        # Comments
-        models.remove_user_comments(user_id)
-
-        # Posts
-        # TODO: Remove comments on user's posts
-        models.remove_user_posts(user_id)
-
-        # Friends
-        models.remove_user_relationships(user_id)
-
-        # Members
-        models.remove_user_memberships(user_id)
-
-        # Notes
-        models.remove_user_notification(user_id)
-
-        user.delete()
-        models.commit_changes()
         return resp.RESP_OK
     except:
         return RESP_SERVER
