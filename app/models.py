@@ -487,14 +487,14 @@ def search_user_by_username(username):
 
 
 def create_post(user_id, group_id, post_title, post_body, post_location, post_cat):
-    #try:
-    p = Post(user_id, group_id, post_title, post_body, post_location, post_cat)
-    p.post_likes = 0
-    session.add(p)
-    session.commit()
-    return p.post_id
-    #except:
-    #    return False
+    try:
+        p = Post(user_id, group_id, post_title, post_body, post_location, post_cat)
+        p.post_likes = 0
+        session.add(p)
+        session.commit()
+        return p.post_id
+    except:
+        return False
 
 
 def remove_post(post_id):

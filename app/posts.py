@@ -57,6 +57,9 @@ def create_post(post):
     except:
         post_location = post["location"]
 
+    if len(post_title) > 50:
+        return gen_response(resp.ERR_INVALID, {"reason": "Title too long"})
+
     p = models.create_post(user_id, group_id, post_title, post_body, post_location, post_cat)
 
     if p is False:
