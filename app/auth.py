@@ -384,9 +384,9 @@ def login(username, email, password, remember_me):
             return gen_response(resp.ERR_MISSING, {"reason": "Failed to find user"})
 
         # Check verified account
-        if user.auth_token is not None:
-            if user.auth_token.startswith("email"):
-                return gen_response(resp.RESP_INVALID, {"reason:" "You need to verify your account first"})
+        #if user.auth_token is not None:
+        #    if user.auth_token.startswith("email"):
+        #       return gen_response(resp.RESP_INVALID, {"reason:" "You need to verify your account first"})
 
         # Verify password
         if sha256_crypt.verify(password, user.password):
