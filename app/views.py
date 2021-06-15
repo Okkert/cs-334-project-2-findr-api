@@ -61,7 +61,10 @@ class LoginUser(APIView):
 
 
 class LogoutUser(APIView):
+
     def post(self, request, *args, **kwargs):
+        if not authentic_token(request):
+            return invalid_token
         try:
             # We don't use the standard token checking here, because the token is also the input
             token = get_request_token(request.headers)
@@ -72,6 +75,8 @@ class LogoutUser(APIView):
 
 class LoadUser(APIView):
     def get(self, request, *args, **kwargs):
+        if not authentic_token(request):
+            return invalid_token
         try:
             user_id = request.query_params['userId']
         except KeyError:
@@ -87,6 +92,8 @@ class LoadUser(APIView):
 
 class SearchUser(APIView):
     def get(self, request, *args, **kwargs):
+        if not authentic_token(request):
+            return invalid_token
         try:
             user_id = request.query_params['userId']
             search_term = request.query_params['username']
@@ -97,6 +104,8 @@ class SearchUser(APIView):
 
 class UpdateUser(APIView):
     def put(self, request, *args, **kwargs):
+        if not authentic_token(request):
+            return invalid_token
         try:
             user_id = request.query_params['userId']
             user_info = {
@@ -122,6 +131,8 @@ class UpdateUser(APIView):
 
 class DeleteUser(APIView):
     def delete(self, request, *args, **kwargs):
+        if not authentic_token(request):
+            return invalid_token
         try:
             user_id = request.query_params['UserId']
         except KeyError:
@@ -131,6 +142,8 @@ class DeleteUser(APIView):
 
 class UpdateAvatar(APIView):
     def put(self, request, *args, **kwargs):
+        if not authentic_token(request):
+            return invalid_token
         try:
             user_id = request.query_params['userId']
             url = request.query_params['url']
@@ -141,6 +154,8 @@ class UpdateAvatar(APIView):
 
 class LoadFeed(APIView):
     def get(self, request, *args, **kwargs):
+        if not authentic_token(request):
+            return invalid_token
         filter_params = {
             "type": "Time"
         }
@@ -200,6 +215,8 @@ class LoadFeed(APIView):
 class LoadUserId(APIView):
     def get(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             username = request.query_params['username']
         except KeyError:
             return invalid_response
@@ -210,6 +227,8 @@ class LoadUserId(APIView):
 class LoadUserGroups(APIView):
     def get(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             user_id = request.query_params['userId']
         except KeyError:
             return invalid_response
@@ -223,6 +242,8 @@ class LoadUserGroups(APIView):
 class AddFriend(APIView):
     def post(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             user_a = request.query_params['userId']
             user_b = request.query_params['friendId']
         except KeyError:
@@ -233,6 +254,8 @@ class AddFriend(APIView):
 class InviteFriend(APIView):
     def post(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             user_a = request.query_params['userId']
             user_b = request.query_params['friendId']
         except KeyError:
@@ -243,6 +266,8 @@ class InviteFriend(APIView):
 class RespondToInvite(APIView):
     def post(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             user_a = request.query_params['userId']
             user_b = request.query_params['friendId']
             accepted = request.query_params['accepted']
@@ -254,6 +279,8 @@ class RespondToInvite(APIView):
 class LoadInvites(APIView):
     def get(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             user_id = request.query_params['userId']
         except KeyError:
             return invalid_response
@@ -261,7 +288,10 @@ class LoadInvites(APIView):
 
 
 class LoadFriends(APIView):
+
     def get(self, request, *args, **kwargs):
+        if not authentic_token(request):
+            return invalid_token
         try:
             user_id = request.query_params['userId']
         except KeyError:
