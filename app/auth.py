@@ -336,10 +336,13 @@ def register(username, email, password):
             u = models.search_username(username)
 
             # Notifications + Email Verification
-            verify_code = gen_cool_code()
-            u.auth_token = "email " + verify_code
-            send_registration_email(email, username, verify_code)
-            notes.create_welcome_note(u.user_id)
+            try:
+                verify_code = gen_cool_code()
+                u.auth_token = "email " + verify_code
+                send_registration_email(email, username, verify_code)
+                notes.create_welcome_note(u.user_id)
+            except:
+                print("Notifications on register failed")
         else:
             response = gen_response(resp.ERR_INVALID, {"reason": board})
         return response
