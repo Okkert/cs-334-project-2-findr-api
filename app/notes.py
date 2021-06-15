@@ -1,3 +1,5 @@
+import datetime
+
 from . import models, auth
 import smtplib
 from .utils.toolbox import gen_response, gen_missing, debug_out, tattle, behaved
@@ -31,14 +33,19 @@ def load_notifications(user_id):
 
     note_data = []
     for note in notes:
+        time_obj = datetime.datetime.strptime(note.note_birthday, '%Y-%m-%d %H:%M:%S.%f')
+
+        subject = models.search_user_by_id(note.subject_id)
+
         note_data.append({
             "noteId": note.note_id,
             "notifiedId": note.notified_id,
             "subjectId": note.subject_id,
+            "avatar": subject.avatar,
             "status": note.note_status,
             "type": str(repr(models.noteType(note.note_type))).split("'")[1],
             "desc": note.note_desc,
-            "time": note.note_birthday
+            "time": datetime.datetime.strftime(time_obj, '%d %b %Y, %I %p')
         })
 
     content = {

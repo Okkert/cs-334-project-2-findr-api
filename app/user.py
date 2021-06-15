@@ -335,7 +335,7 @@ def respond_to_invite(id_a, id_b, accepted):
         if cur_rel is None:
             return resp.RESP_INVALID
 
-        if cur_rel is not 0:
+        if cur_rel != 0:
             return resp.RESP_INVALID
 
         models.respond_to_friend_invite(id_a, id_b, accepted)
