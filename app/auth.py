@@ -35,8 +35,10 @@ def get_request_token(headers):
             auth = headers['Authorization']
             token_str = auth.split(" ")
             token = token_str[1]
+            print("Got token ", token)
             return token
         else:
+            print("No Authorization sent")
             return None
     except:
         print('get_request_token failed')

@@ -366,11 +366,8 @@ def load_invites(user_id):
 def load_friends(user_id):
     try:
         friends = models.get_friends(user_id)
-        print(friends)
         friendslist = []
         for friend in friends:
-            print("friend:")
-            print(friend)
             try:
                 friend = int(friend)
             except:
@@ -383,7 +380,6 @@ def load_friends(user_id):
                     "avatar": u.avatar,
                     "bio": u.bio
                 })
-        print(friendslist)
         return gen_response(resp.OK, {"content": friendslist})
     except:
         print("load_friends failed")

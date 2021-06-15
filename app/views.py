@@ -24,10 +24,92 @@ def index(request):
 def authentic_token(request):
     token = get_request_token(request.headers)
     if token is None:
+        print("No token found")
         return False
     auth_response = auth.confirm_token(token)
     token_valid = auth_response.status_code == resp.OK
     return token_valid
+
+
+def get_caller_id(request):
+    token = get_request_token(request.headers)
+    if token is None:
+        return None
+    return auth.decode_token(token)
+
+
+def user_is_caller(request, user_id):
+    caller_id = get_caller_id(request)
+    if caller_id is None:
+        return False
+    return user_id == caller_id
+
+
+def user_is_admin(request, group_id):
+    """Confirms whether token is sent by group admin
+
+        Parameters
+        ----------
+        request : dict
+            Received request containing token
+
+        group_id : int
+            Unique group identifier
+
+        Returns
+        -------
+        bool
+            True if the token owner is an admin, False otherwise
+        """
+    # Get caller id
+    user_id = get_caller_id(request)
+    if user_id is None:
+        return False
+
+    # Group exists
+    if not models.group_exists(group_id):
+        return False
+
+    # Caller is admin
+    admins = models.get_group_admins(group_id)
+    for admin in admins:
+        if admin is not None:
+            if admin.user_id == user_id:
+                return True
+    return False
+
+
+def user_is_author(request, comment_id):
+    """Confirms whether token is sent by comment author
+
+        Parameters
+        ----------
+        request : dict
+            Received request containing token
+
+        comment_id : int
+            Unique comment identifier
+
+        Returns
+        -------
+        bool
+            True if the token owner is the author, False otherwise
+        """
+    # Get caller id
+    user_id = get_caller_id(request)
+    if user_id is None:
+        return False
+
+    # Comment exists
+    c = models.load_comment(comment_id)
+
+    if c is None:
+        return False
+
+    # User is author
+    if user_id != c.user_id:
+        return False
+    return True
 
 
 # ------------------- USERS ------------------- #
@@ -77,6 +159,7 @@ class LoadUser(APIView):
     def get(self, request, *args, **kwargs):
         if not authentic_token(request):
             return invalid_token
+
         try:
             user_id = request.query_params['userId']
         except KeyError:
@@ -126,6 +209,11 @@ class UpdateUser(APIView):
 
         except KeyError:
             return invalid_response
+
+        # User can only update their own account
+        if not user_is_caller(request, user_id):
+            return invalid_token
+
         return user.update_user_details(user_info)
 
 
@@ -137,6 +225,11 @@ class DeleteUser(APIView):
             user_id = request.query_params['UserId']
         except KeyError:
             return invalid_response
+
+        # User can only delete their own account
+        if not user_is_caller(request, user_id):
+            return resp.RESP_ILLEGAL
+
         return user.delete_user(user_id)
 
 
@@ -149,6 +242,10 @@ class UpdateAvatar(APIView):
             url = request.query_params['url']
         except KeyError:
             return invalid_response
+
+        if not user_is_caller(request, user_id):
+            return invalid_token
+
         return user.update_avatar(user_id, url)
 
 
@@ -248,6 +345,10 @@ class AddFriend(APIView):
             user_b = request.query_params['friendId']
         except KeyError:
             return invalid_response
+
+        if not user_is_caller(request, user_a):
+            return invalid_token
+
         return user.add_friend(user_a, user_b)
 
 
@@ -260,6 +361,10 @@ class InviteFriend(APIView):
             user_b = request.query_params['friendId']
         except KeyError:
             return invalid_response
+
+        if not user_is_caller(request, user_a):
+            return invalid_token
+
         return user.invite_friend(user_a, user_b)
 
 
@@ -273,6 +378,10 @@ class RespondToInvite(APIView):
             accepted = request.query_params['accepted']
         except KeyError:
             return invalid_response
+
+        if not user_is_caller(request, user_a):
+            return invalid_token
+
         return user.respond_to_invite(user_a, user_b, accepted)
 
 
@@ -284,6 +393,10 @@ class LoadInvites(APIView):
             user_id = request.query_params['userId']
         except KeyError:
             return invalid_response
+
+        if not user_is_caller(request, user_id):
+            return invalid_token
+
         return user.load_invites(user_id)
 
 
@@ -296,10 +409,14 @@ class LoadFriends(APIView):
             user_id = request.query_params['userId']
         except KeyError:
             return invalid_response
+
+        if not user_is_caller(request, user_id):
+            return invalid_token
+
         return user.load_friends(user_id)
 
-# ------------------- GROUPS ------------------- #
 
+# ------------------- GROUPS ------------------- #
 class Group(APIView):
     # Load group
     def get(self, request, *args, **kwargs):
@@ -345,6 +462,9 @@ class Group(APIView):
         except KeyError:
             return invalid_response
 
+        if not user_is_admin(request, group_id):
+            return invalid_token
+
         return groups.delete_group(group_id=group_id)
 
     # Edit Group
@@ -366,6 +486,9 @@ class Group(APIView):
             'private': private
         }
 
+        if not user_is_admin(request, group_id):
+            return invalid_token
+
         return groups.edit_group(group)
 
 
@@ -379,6 +502,9 @@ class LeaveGroup(APIView):
         except KeyError:
             return invalid_response
 
+        if not user_is_caller(request, user_id):
+            return invalid_token
+
         return groups.leave_group(user_id=user_id, group_id=group_id)
 
 
@@ -391,6 +517,9 @@ class JoinGroup(APIView):
             user_id = request.query_params["userId"]
         except KeyError:
             return invalid_response
+
+        if not user_is_caller(request, user_id):
+            return invalid_token
 
         return groups.join_group(group_id=group_id, user_id=user_id)
 
@@ -413,10 +542,14 @@ class LoadGroupPosts(APIView):
         try:
             if not authentic_token(request):
                 return invalid_token
+
             group_id = request.query_params["groupId"]
             user_id = request.query_params["userId"]
         except KeyError:
             return invalid_response
+
+        if not user_is_caller(request, user_id):
+            return invalid_token
 
         return groups.load_group_posts(group_id, user_id)
 
@@ -426,6 +559,7 @@ class LoadGroupMembers(APIView):
         try:
             if not authentic_token(request):
                 return invalid_token
+
             group_id = request.query_params["groupId"]
         except KeyError:
             return invalid_response
@@ -438,11 +572,15 @@ class PromoteMember(APIView):
         try:
             if not authentic_token(request):
                 return invalid_token
+
             group_id = request.query_params["groupId"]
             user_id = request.query_params["userId"]
             promote_id = request.query_params["promoteId"]
         except KeyError:
             return invalid_response
+
+        if not user_is_admin(request, group_id):
+            return invalid_token
 
         return groups.promote_member(group_id, user_id, promote_id)
 
@@ -452,11 +590,15 @@ class DemoteMember(APIView):
         try:
             if not authentic_token(request):
                 return invalid_token
+
             group_id = request.query_params["groupId"]
             user_id = request.query_params["userId"]
             demote_id = request.query_params["demoteId"]
         except KeyError:
             return invalid_response
+
+        if not user_is_admin(request, group_id):
+            return invalid_token
 
         return groups.demote_member(group_id, user_id, demote_id)
 
@@ -466,9 +608,14 @@ class LoadJoinRequest(APIView):
         try:
             if not authentic_token(request):
                 return invalid_token
+
             group_id = request.query_params["groupId"]
         except KeyError:
             return invalid_response
+
+        # User is admin
+        if not user_is_admin(request, group_id):
+            return invalid_token
 
         return groups.load_join_request(group_id)
 
@@ -478,10 +625,14 @@ class RequestJoinGroup(APIView):
         try:
             if not authentic_token(request):
                 return invalid_token
+
             group_id = request.query_params["groupId"]
             user_id = request.query_params["userId"]
         except KeyError:
             return invalid_response
+
+        if not user_is_caller(request, user_id):
+            return invalid_token
 
         return groups.request_group_invite(group_id=group_id, user_id=user_id)
 
@@ -491,10 +642,14 @@ class AcceptJoinRequest(APIView):
         try:
             if not authentic_token(request):
                 return invalid_token
+
             group_id = request.query_params["groupId"]
             user_id = request.query_params["userId"]
         except KeyError:
             return invalid_response
+
+        if not user_is_admin(request, group_id):
+            return invalid_token
 
         return groups.accept_join_request(group_id=group_id, user_id=user_id)
 
@@ -504,10 +659,14 @@ class DeclineJoinRequest(APIView):
         try:
             if not authentic_token(request):
                 return invalid_token
+
             group_id = request.query_params["groupId"]
             user_id = request.query_params["userId"]
         except KeyError:
             return invalid_response
+
+        if not user_is_admin(request, group_id):
+            return invalid_token
 
         return groups.decline_join_request(group_id=group_id, user_id=user_id)
 
@@ -520,6 +679,7 @@ class Post(APIView):
         try:
             if not authentic_token(request):
                 return invalid_token
+
             user_id = request.query_params["userId"]
             group_id = request.query_params["groupId"]
             post_title = request.query_params["title"]
@@ -547,6 +707,7 @@ class Post(APIView):
         try:
             if not authentic_token(request):
                 return invalid_token
+
             post_id = request.query_params["postId"]
             user_id = request.query_params["userId"]
         except KeyError:
@@ -559,6 +720,7 @@ class Post(APIView):
         try:
             if not authentic_token(request):
                 return invalid_token
+
             post_id = request.query_params["postId"]
             user_id = request.query_params["userId"]
             post_title = request.query_params["title"]
@@ -571,6 +733,10 @@ class Post(APIView):
             "title": post_title,
             "postContent": post_content
         }
+
+        if not user_is_caller(request, user_id):
+            return invalid_token
+
         return posts.edit_post(post=post, user_id=user_id)
 
     # Delete Post
@@ -578,10 +744,14 @@ class Post(APIView):
         try:
             if not authentic_token(request):
                 return invalid_token
+
             post_id = request.query_params["postId"]
             user_id = request.query_params["userId"]
         except KeyError:
             return invalid_response
+
+        if not user_is_caller(request, user_id):
+            return invalid_token
 
         return posts.remove_post(post_id=post_id, user_id=user_id)
 
@@ -595,6 +765,10 @@ class LikePost(APIView):
             user_id = request.query_params["userId"]
         except KeyError:
             return invalid_response
+
+        if not user_is_caller(request, user_id):
+            return invalid_token
+
         return posts.like_post(post_id=post_id, user_id=user_id)
 
 
@@ -607,6 +781,10 @@ class UnlikePost(APIView):
             user_id = request.query_params["userId"]
         except KeyError:
             return invalid_response
+
+        if not user_is_caller(request, user_id):
+            return invalid_token
+
         return posts.unlike_post(post_id=post_id, user_id=user_id)
 
 # ------------------- COMMENTS ------------------- #
@@ -622,6 +800,10 @@ class Comment(APIView):
             content = request.query_params['content']
         except KeyError:
             return invalid_response
+
+        if not user_is_caller(request, user_id):
+            return invalid_token
+
         return comments.create_comment(post_id, user_id, content)
 
     # Read
@@ -646,6 +828,10 @@ class Comment(APIView):
                 data = {'content': content}
         except KeyError:
             return invalid_response
+
+        if not user_is_author(request, comment_id):
+            return invalid_token
+
         return comments.update_comment(comment_id, data)
 
     # Delete
@@ -656,6 +842,10 @@ class Comment(APIView):
             comment_id = request.query_params['commentId']
         except KeyError:
             return invalid_response
+
+        if not user_is_author(request, comment_id):
+            return invalid_token
+
         return comments.delete_comment(comment_id)
 
 
