@@ -18,6 +18,8 @@ urlpatterns = [
     path('invite_friend/', views.InviteFriend.as_view(), name="invite_friend"),
     path('respond_to_invite/', views.RespondToInvite.as_view(), name="respond_to_invite"),
     path('delete_user/', views.DeleteUser.as_view(), name="delete_user"),
+    path('load_friend_requests/', views.LoadInvites.as_view(), name="load_friend_requests"),
+    path('load_friends/', views.LoadFriends.as_view(), name="load_friends"),
     # ------------------- GROUPS ------------------- #
     path('group/', views.Group.as_view(), name="group"),
     path('leave_group/', views.LeaveGroup.as_view(), name="leave_group"),

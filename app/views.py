@@ -259,12 +259,23 @@ class LoadInvites(APIView):
             return invalid_response
         return user.load_invites(user_id)
 
+
+class LoadFriends(APIView):
+    def get(self, request, *args, **kwargs):
+        try:
+            user_id = request.query_params['userId']
+        except KeyError:
+            return invalid_response
+        return user.load_friends(user_id)
+
 # ------------------- GROUPS ------------------- #
 
 class Group(APIView):
     # Load group
     def get(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             group_id = request.query_params["groupId"]
         except KeyError:
             return invalid_response
@@ -275,8 +286,8 @@ class Group(APIView):
     def post(self, request, *args, **kwargs):
         try:
             # This is an example of token checking
-#             if not authentic_token(request):
-#                 return invalid_token
+            if not authentic_token(request):
+                return invalid_token
             title = request.query_params["title"]
             description = request.query_params["description"]
             private = bool(request.query_params["private"])
@@ -298,6 +309,8 @@ class Group(APIView):
     # Delete Group
     def delete(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             group_id = request.query_params["groupId"]
         except KeyError:
             return invalid_response
@@ -307,6 +320,8 @@ class Group(APIView):
     # Edit Group
     def put(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             group_id = request.query_params["groupId"]
             title = request.query_params["title"]
             description = request.query_params["description"]
@@ -327,6 +342,8 @@ class Group(APIView):
 class LeaveGroup(APIView):
     def get(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             group_id = request.query_params["groupId"]
             user_id = request.query_params["userId"]
         except KeyError:
@@ -338,6 +355,8 @@ class LeaveGroup(APIView):
 class JoinGroup(APIView):
     def get(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             group_id = request.query_params["groupId"]
             user_id = request.query_params["userId"]
         except KeyError:
@@ -349,6 +368,8 @@ class JoinGroup(APIView):
 class SearchGroups(APIView):
     def get(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             search_term = request.query_params["search"]
             user_id = request.query_params["userId"]
         except KeyError:
@@ -360,6 +381,8 @@ class SearchGroups(APIView):
 class LoadGroupPosts(APIView):
     def get(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             group_id = request.query_params["groupId"]
             user_id = request.query_params["userId"]
         except KeyError:
@@ -371,6 +394,8 @@ class LoadGroupPosts(APIView):
 class LoadGroupMembers(APIView):
     def get(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             group_id = request.query_params["groupId"]
         except KeyError:
             return invalid_response
@@ -381,6 +406,8 @@ class LoadGroupMembers(APIView):
 class PromoteMember(APIView):
     def get(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             group_id = request.query_params["groupId"]
             user_id = request.query_params["userId"]
             promote_id = request.query_params["promoteId"]
@@ -393,6 +420,8 @@ class PromoteMember(APIView):
 class DemoteMember(APIView):
     def get(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             group_id = request.query_params["groupId"]
             user_id = request.query_params["userId"]
             demote_id = request.query_params["demoteId"]
@@ -405,6 +434,8 @@ class DemoteMember(APIView):
 class LoadJoinRequest(APIView):
     def get(self, request):
         try:
+            if not authentic_token(request):
+                return invalid_token
             group_id = request.query_params["groupId"]
         except KeyError:
             return invalid_response
@@ -415,6 +446,8 @@ class LoadJoinRequest(APIView):
 class RequestJoinGroup(APIView):
     def get(self, request):
         try:
+            if not authentic_token(request):
+                return invalid_token
             group_id = request.query_params["groupId"]
             user_id = request.query_params["userId"]
         except KeyError:
@@ -426,6 +459,8 @@ class RequestJoinGroup(APIView):
 class AcceptJoinRequest(APIView):
     def get(self, request):
         try:
+            if not authentic_token(request):
+                return invalid_token
             group_id = request.query_params["groupId"]
             user_id = request.query_params["userId"]
         except KeyError:
@@ -437,6 +472,8 @@ class AcceptJoinRequest(APIView):
 class DeclineJoinRequest(APIView):
     def get(self, request):
         try:
+            if not authentic_token(request):
+                return invalid_token
             group_id = request.query_params["groupId"]
             user_id = request.query_params["userId"]
         except KeyError:
@@ -451,6 +488,8 @@ class Post(APIView):
     # Create post
     def post(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             user_id = request.query_params["userId"]
             group_id = request.query_params["groupId"]
             post_title = request.query_params["title"]
@@ -476,6 +515,8 @@ class Post(APIView):
     # Read post
     def get(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             post_id = request.query_params["postId"]
             user_id = request.query_params["userId"]
         except KeyError:
@@ -486,6 +527,8 @@ class Post(APIView):
     # Edit post
     def put(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             post_id = request.query_params["postId"]
             user_id = request.query_params["userId"]
             post_title = request.query_params["title"]
@@ -503,6 +546,8 @@ class Post(APIView):
     # Delete Post
     def delete(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             post_id = request.query_params["postId"]
             user_id = request.query_params["userId"]
         except KeyError:
@@ -514,6 +559,8 @@ class Post(APIView):
 class LikePost(APIView):
     def get(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             post_id = request.query_params["postId"]
             user_id = request.query_params["userId"]
         except KeyError:
@@ -524,6 +571,8 @@ class LikePost(APIView):
 class UnlikePost(APIView):
     def get(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             post_id = request.query_params["postId"]
             user_id = request.query_params["userId"]
         except KeyError:
@@ -536,6 +585,8 @@ class Comment(APIView):
     # Create
     def post(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             post_id = request.query_params['postId']
             user_id = request.query_params['userId']
             content = request.query_params['content']
@@ -546,6 +597,8 @@ class Comment(APIView):
     # Read
     def get(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             comment_id = request.query_params['commentId']
         except KeyError:
             return invalid_response
@@ -554,6 +607,8 @@ class Comment(APIView):
     # Update
     def put(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             comment_id = request.query_params['commentId']
             data = None
             if 'content' in request.query_params:
@@ -566,6 +621,8 @@ class Comment(APIView):
     # Delete
     def delete(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             comment_id = request.query_params['commentId']
         except KeyError:
             return invalid_response
@@ -577,6 +634,8 @@ class Notification(APIView):
     # Create
     def post(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             notified_id = request.query_params['notifiedId']
             subject_id = request.query_params['subjectId']
             group_id = 69
@@ -598,6 +657,8 @@ class Notification(APIView):
     # Read
     def get(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             note_id = request.query_params['noteId']
             print("finding note ", note_id)
         except KeyError:
@@ -607,6 +668,8 @@ class Notification(APIView):
     # Update
     def put(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             note_id = request.query_params['noteId']
         except KeyError:
             return invalid_response
@@ -615,6 +678,8 @@ class Notification(APIView):
     # Delete
     def delete(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             note_id = request.query_params['noteId']
         except KeyError:
             return invalid_response
@@ -624,6 +689,8 @@ class Notification(APIView):
 class LoadNotifications(APIView):
     def get(self, request, *args, **kwargs):
         try:
+            if not authentic_token(request):
+                return invalid_token
             user_id = request.query_params['userId']
         except KeyError:
             return invalid_response

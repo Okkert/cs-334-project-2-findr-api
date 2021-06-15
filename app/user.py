@@ -170,7 +170,7 @@ def delete_user(user_id):
         return resp.RESP_OK
     except:
         return RESP_SERVER
-    
+
 
 def get_rel_type(id_a, id_b):
     """Gets the type of a relationship between two users
@@ -360,6 +360,33 @@ def load_invites(user_id):
         return gen_response(resp.OK, {"invites": invites})
     except:
         print("load_invite failed")
+        return resp.RESP_SERVER
+
+
+def load_friends(user_id):
+    try:
+        friends = models.get_friends(user_id)
+        print(friends)
+        friendslist = []
+        for friend in friends:
+            print("friend:")
+            print(friend)
+            try:
+                friend = int(friend)
+            except:
+                return resp.RESP_INVALID
+            u = models.search_user_by_id(friend)
+            if u is not None:
+                friendslist.append({
+                    "userId": u.user_id,
+                    "username": u.username,
+                    "avatar": u.avatar,
+                    "bio": u.bio
+                })
+        print(friendslist)
+        return gen_response(resp.OK, {"content": friendslist})
+    except:
+        print("load_friends failed")
         return resp.RESP_SERVER
 
 
