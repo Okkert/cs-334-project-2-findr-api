@@ -469,8 +469,6 @@ class Group(APIView):
     # Delete Group
     def delete(self, request, *args, **kwargs):
         try:
-            if not authentic_token(request):
-                return invalid_token
             group_id = request.query_params["groupId"]
         except KeyError:
             return invalid_response
