@@ -473,9 +473,6 @@ class Group(APIView):
         except KeyError:
             return invalid_response
 
-        if not user_is_admin(request, group_id):
-            return invalid_token
-
         return groups.delete_group(group_id=group_id)
 
     # Edit Group
