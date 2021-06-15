@@ -487,14 +487,14 @@ def search_user_by_username(username):
 
 
 def create_post(user_id, group_id, post_title, post_body, post_location, post_cat):
-    try:
-        p = Post(user_id, group_id, post_title, post_body, post_location, post_cat)
-        p.post_likes = 0
-        session.add(p)
-        session.commit()
-        return p.post_id
-    except:
-        return False
+    #try:
+    p = Post(user_id, group_id, post_title, post_body, post_location, post_cat)
+    p.post_likes = 0
+    session.add(p)
+    session.commit()
+    return p.post_id
+    #except:
+    #    return False
 
 
 def remove_post(post_id):
@@ -1086,6 +1086,7 @@ def get_post(group_id, user_id, post_title):
     print(p)
     return p
 
+
 def update_userAvatar(user_id, avatar):
     u = session.query(User).filter(User.user_id == user_id).first()
     u.avatar = avatar
@@ -1112,3 +1113,4 @@ def delete_user_data(user_id):
         return True
     except:
         return False
+

@@ -60,6 +60,7 @@ def create_post(post):
     p = models.create_post(user_id, group_id, post_title, post_body, post_location, post_cat)
 
     if p is False:
+        print("Failed to create post")
         content = {
             "reason": "Internal server error"
         }

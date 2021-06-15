@@ -42,16 +42,12 @@ def get_caller_id(request):
 
 def user_is_caller(request, user_id):
     caller_id = get_caller_id(request)
-    print("Caller id: ", caller_id)
-    print("User id: ", user_id)
     if caller_id is None:
-        print("Caller id is none")
         return False
     try:
         valid = int(user_id) == int(caller_id)
     except:
         return False
-    print("Caller is user? ", valid)
     return valid
 
 
