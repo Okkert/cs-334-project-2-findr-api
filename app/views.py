@@ -80,7 +80,13 @@ def user_is_admin(request, group_id):
     admins = models.get_group_admins(group_id)
     for admin in admins:
         if admin is not None:
-            if admin.user_id == user_id:
+
+            try:
+                valid = int(admin.user_id) == user_id
+            except:
+                return False
+
+            if valid:
                 return True
     return False
 

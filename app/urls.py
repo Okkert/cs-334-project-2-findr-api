@@ -11,6 +11,7 @@ urlpatterns = [
     path('load_user/', views.LoadUser.as_view(), name="load_user"),
     path('search_user/', views.SearchUser.as_view(), name="search_user"),
     path('update_user/', views.UpdateUser.as_view(), name="update_user"),
+    path('update_avatar/', views.UpdateAvatar.as_view(), name="update_avatar"),
     path('load_feed/', views.LoadFeed.as_view(), name="load_feed"),
     path('load_userId/', views.LoadUserId.as_view(), name="load_user_id"),
     path('load_user_groups/', views.LoadUserGroups.as_view(), name="load_user_groups"),
