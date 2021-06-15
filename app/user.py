@@ -217,7 +217,7 @@ def search_user(search_term, user_id):
     """
     try:
         users_found = models.search_users_by_name(search_term)
-        print(users_found)
+        #print(users_found)
         users = []
 
         for user in users_found:
