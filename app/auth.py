@@ -340,7 +340,7 @@ def register(username, email, password):
                 verify_code = gen_cool_code()
                 u.auth_token = "email " + verify_code
                 send_registration_email(email, username, verify_code)
-                notes.create_welcome_note(u.user_id)
+                # notes.create_welcome_note(u.user_id)
             except:
                 print("Notifications on register failed")
         else:
