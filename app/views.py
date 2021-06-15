@@ -33,13 +33,17 @@ def authentic_token(request):
 
 def get_caller_id(request):
     token = get_request_token(request.headers)
+    print("Get caller id, token: ", token)
     if token is None:
+        print("Get caller id, no token found")
         return None
     return auth.decode_token(token)
 
 
 def user_is_caller(request, user_id):
     caller_id = get_caller_id(request)
+    print("Caller id: ", caller_id)
+    print("User id: ", user_id)
     if caller_id is None:
         return False
     return user_id == caller_id
