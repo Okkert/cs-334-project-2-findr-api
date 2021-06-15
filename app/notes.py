@@ -498,7 +498,7 @@ def send_registration_email(email, username):
 
     msg = f"Subject: {subject}\n\n{body}"
 
-    with smtplib.SMTP("smtp.gmail.com", 587) as connection:
+    with smtplib.SMTP("smtp.gmail.com") as connection:
         connection.ehlo()
         connection.starttls()
         connection.ehlo()
