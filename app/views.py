@@ -45,8 +45,14 @@ def user_is_caller(request, user_id):
     print("Caller id: ", caller_id)
     print("User id: ", user_id)
     if caller_id is None:
+        print("Caller id is none")
         return False
-    return user_id == caller_id
+    try:
+        valid = int(user_id) == int(caller_id)
+    except:
+        return False
+    print("Caller is user? ", valid)
+    return valid
 
 
 def user_is_admin(request, group_id):
@@ -345,6 +351,7 @@ class AddFriend(APIView):
         try:
             if not authentic_token(request):
                 return invalid_token
+
             user_a = request.query_params['userId']
             user_b = request.query_params['friendId']
         except KeyError:
